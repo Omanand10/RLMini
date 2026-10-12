@@ -46,8 +46,8 @@ R_BUMP = -1.0
 R_SAMPLE = 10.0
 R_SENT = 25.0
 R_WRONG = -2.0
-R_CRATER = -50.0
-R_DEAD = -50.0
+R_CRATER = -100.0          # losing the rover is catastrophic
+R_DEAD = -100.0
 R_SLEEP_SAFE = 30.0
 R_MISSION = 50.0          # bonus: safe sleep with every sample relayed
 R_SLEEP_UNSAFE = -50.0     # hibernating early, in shadow or on low battery = mission lost

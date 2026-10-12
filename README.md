@@ -1,118 +1,37 @@
-# Smart Traffic Control RL 🚦
+# Project Pragyan: RL Mission Planner for the Chandrayaan-3 Lunar Rover
 
-A reinforcement learning application for adaptive traffic signal control using Eclipse SUMO, SUMO-RL, and Stable-Baselines3. Features a custom congestion-aware reward function, side-by-side fixed-time vs. RL comparative evaluation, a FastAPI backend with Server-Sent Events (SSE) streaming, and an interactive React + TypeScript + Tailwind dashboard.
+This project trains an RL agent to plan Pragyan's day on the Moon. The agent has to:
+- Sample science sites with the correct instrument (LIBS or APXS).
+- Relay the data through the Vikram lander.
+- Manage battery and sunlight.
+- Avoid craters on slippery regolith.
+- Hibernate safely before lunar night.
 
----
+The environment is inspired by the mission. It is not a replica of the real terrain.
 
-## ⚡ Quick Start
-
-### 1. Prerequisites
-Ensure Eclipse SUMO is installed on your machine and set `SUMO_HOME`:
+## Run
 ```bash
-# Example for conda / macOS:
-export SUMO_HOME="/opt/anaconda3/lib/python3.12/site-packages/sumo"
-# Or system-wide Homebrew/Linux install:
-# export SUMO_HOME="/usr/local/share/sumo"
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+.venv/bin/python -m pragyan.env          # environment self-check
+.venv/bin/python train.py                # trains + evaluates every agent (~20-30 min, 10 cores)
+.venv/bin/python plots.py                # figures -> results/plots/
+open demo/index.html                     # simulation demo (works offline)
 ```
+`train.py --quick` runs a 2-minute smoke test of the whole pipeline.
 
-Install Python dependencies:
-```bash
-pip install -r requirements.txt
-```
+## Files
+| Path | What |
+|---|---|
+| `pragyan/env.py` | `PragyanEnv` (Gymnasium) holds the MDP. `outcomes()` is the single source of truth for the dynamics. |
+| `pragyan/tabular.py` | Value Iteration, Monte Carlo control, Q-learning, SARSA, n-step SARSA, Dyna-Q, and the baselines |
+| `pragyan/dqn.py` | DQN with experience replay, a target network, Double-DQN targets and n-step returns |
+| `train.py` | Experiments: main runs, hyper-parameter sweeps and evaluation. Writes `results/` and `demo/data.js`. |
+| `plots.py` | Every graph used in the report |
+| `demo/index.html` | Lunar simulation with three modes: Replay, Head-to-Head, and Live crater-drop (DQN runs in the browser) |
 
-Install frontend dependencies:
-```bash
-cd dashboard
-npm install
-cd ..
-```
+## Demo modes
+- **Mission Replay:** watch any agent at episode 1, mid-training, or after training.
+- **Head-to-Head:** two agents on the same map, side by side.
+- **Live: Drop a Crater:** click to add craters or boulders while the DQN rover drives. It replans on every step, as Pragyan did at the 4 m crater on 27 Aug 2023.
 
----
-
-## 🚀 Running the System
-
-### Start the Backend (FastAPI + SUMO Simulation)
-```bash
-./start_backend.sh
-```
-* **API Server**: [http://localhost:8000](http://localhost:8000)
-* **Interactive Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-### Start the Frontend Dashboard (React + TypeScript + Tailwind)
-In a separate terminal:
-```bash
-./start_dashboard.sh
-```
-* **Dashboard Web UI**: [http://localhost:5173](http://localhost:5173)
-
----
-
-## 🧪 Running Experiments from Command Line
-
-You can also run benchmarks headlessly without launching the web server:
-
-```bash
-# Generate routes (optional, pre-generated file included)
-python3 scripts/generate_routes.py --duration 3600
-
-# Run full baseline vs DQN comparison
-python3 scripts/run_experiment.py --timesteps 20000 --duration 3600
-```
-
-Results are saved to:
-* `results/fixed_time_results.csv`
-* `results/rl_dqn_results.csv`
-* `results/comparison.csv`
-* `results/comparison.json`
-* `models/dqn_traffic.zip`
-
-Detailed experimental findings and metrics are documented in [REPORT.md](REPORT.md).
-
----
-
-## 📊 Dashboard Features
-
-* **Simulation Controls**: One-click execution for Fixed-Time baseline, DQN RL Training, RL Evaluation, Full Comparative Pipeline, and State Reset.
-* **Live Telemetry Charts**: Real-time streaming charts for cumulative rewards, average vehicle speeds, waiting times, and queue lengths.
-* **Comparative Results Table**: Direct side-by-side percentage improvement breakdown between Fixed-Time and RL.
-* **CSV & Report Export**: Direct in-browser download of raw simulation timeseries data.
-
----
-
-## 🏗️ Architecture
-
-```
-RLMini/
-├── backend/
-│   ├── __init__.py
-│   └── server.py              # FastAPI server + SSE streaming
-├── dashboard/                 # React + TypeScript + Tailwind CSS UI
-│   ├── src/
-│   │   ├── App.tsx            # Main dashboard component & charts
-│   │   ├── api.ts             # API client & SSE consumer
-│   │   └── index.css          # Tailwind CSS design system
-│   ├── package.json
-│   └── vite.config.ts
-├── models/                    # Saved RL policy checkpoints (.gitkeep)
-├── results/                   # Simulation CSVs and JSON reports (.gitkeep)
-├── rl_engine/
-│   ├── __init__.py
-│   ├── engine.py              # Training, baseline & evaluation runners
-│   └── rewards.py             # Custom congestion-aware reward function
-├── scripts/
-│   ├── generate_routes.py     # Deterministic SUMO vehicle flow generator
-│   └── run_experiment.py      # Standalone headless CLI experiment runner
-├── sumo_files/                # SUMO network, edge, node, and configuration files
-├── start_backend.sh           # Backend launcher script
-├── start_dashboard.sh         # Frontend launcher script
-├── requirements.txt           # Python dependencies
-├── REPORT.md                  # Experimental results & benchmark analysis
-└── .gitignore                 # GitHub ignore rules
-```
-
----
-
-## 📜 Attribution & License Notice
-
-* **Eclipse SUMO**: Eclipse Public License Version 2.0 (EPL-2.0).
-* **SUMO-RL**: Lucas N. Alegre (MIT License). Used as an installed Python library without local repository cloning.
+The badge in the header confirms that the JavaScript environment reproduces every recorded Python transition and every DQN decision.
