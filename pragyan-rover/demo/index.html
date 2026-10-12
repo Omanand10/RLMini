@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project Pragyan - RL Mission Planner</title>
+<style>
+  :root {
+    --bg: #05070d; --panel: #0d1220; --panel2: #121a2e; --line: #23304d; --text: #dfe6f3;
+    --muted: #8391ad; --accent: #ff9933; --green: #2ecc71; --red: #ff5050; --blue: #4aa3ff; --gold: #d4af37;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  body { min-height: 100vh; background: radial-gradient(ellipse at 20% -10%, #14213d 0%, transparent 55%), radial-gradient(ellipse at 110% 110%, #1b1030 0%, transparent 50%), var(--bg); }
+  #stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  header, main { position: relative; z-index: 1; }
+  header { display: flex; align-items: center; gap: 18px; padding: 12px 22px; border-bottom: 1px solid var(--line); background: rgba(5,7,13,.75); backdrop-filter: blur(6px); flex-wrap: wrap; }
+  .brand { display: flex; flex-direction: column; }
+  .brand b { font-size: 18px; letter-spacing: .5px; }
+  .brand b span { color: var(--accent); }
+  .brand small { color: var(--muted); font-size: 12px; }
+  nav { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+  nav button { background: transparent; color: var(--muted); border: 1px solid var(--line); padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+  nav button.on { color: #000; background: var(--accent); border-color: var(--accent); font-weight: 600; }
+  #verify { font-size: 12px; color: var(--muted); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--line); }
+  #verify.ok { color: var(--green); border-color: #1d5c39; }
+  #verify.bad { color: var(--red); border-color: #6b1f1f; }
+  main { padding: 16px 22px 30px; }
+  .view { display: none; }
+  .view.on { display: block; }
+  .row { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+  .card { background: rgba(13,18,32,.88); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  .stage { position: relative; }
+  canvas.world { display: block; border-radius: 8px; box-shadow: 0 0 0 1px #2a3550, 0 20px 50px rgba(0,0,0,.6); cursor: default; }
+  .controls { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  select, .btn { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 7px; padding: 6px 10px; font-size: 13px; }
+  .btn { cursor: pointer; }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+  input[type=range] { accent-color: var(--accent); width: 110px; }
+  .side { width: 380px; display: flex; flex-direction: column; gap: 12px; }
+  .hud h4, .side h4 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); font-weight: 600; }
+  .meter { height: 14px; background: #0a0f1b; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+  .meter > div { height: 100%; transition: width .25s, background .25s; }
+  .kv { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-size: 13px; margin-top: 8px; }
+  .kv span:nth-child(even) { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .sites { display: flex; gap: 6px; margin-top: 8px; }
+  .site { flex: 1; border-radius: 6px; padding: 4px 0; text-align: center; font-size: 11px; border: 1px solid var(--line); color: var(--muted); }
+  .site.held { border-color: #c98a1c; color: #ffcc66; }
+  .site.sent { border-color: #1d7a45; color: #6dffa8; background: rgba(46,204,113,.08); }
+  .log { height: 270px; overflow-y: auto; font: 12px/1.45 ui-monospace, Menlo, Consolas, monospace; background: #070b14; border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+  .log div { white-space: pre-wrap; }
+  .log .t { color: #56627e; }
+  .ev-good { color: #6dffa8; } .ev-bad { color: #ff7b7b; } .ev-warn { color: #ffcc66; } .ev-info { color: #9fc3ff; } .ev-dim { color: #8391ad; }
+  .sun { position: relative; height: 54px; }
+  .sun svg { width: 100%; height: 54px; }
+  .compare-col { flex: 1; min-width: 340px; }
+  .mini-hud { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; font-size: 12px; }
+  .mini-hud div { background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 5px 7px; }
+  .mini-hud b { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .qbars { display: grid; grid-template-columns: 74px 1fr 46px; gap: 3px 6px; font-size: 11px; align-items: center; }
+  .qbars .bar { height: 10px; background: #0a0f1b; border-radius: 3px; overflow: hidden; }
+  .qbars .bar div { height: 100%; background: var(--blue); }
+  .qbars .best { color: var(--accent); font-weight: 700; }
+  .qbars .masked { opacity: .3; }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  .stage > .hint, .stage > .legend { width: 0; min-width: 100%; }
+  table.score { border-collapse: collapse; width: 100%; font-size: 13px; }
+  table.score th, table.score td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; }
+  table.score th:first-child, table.score td:first-child { text-align: left; }
+  table.score th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .6px; }
+  table.score tr.best td { color: var(--accent); font-weight: 700; }
+  .banner { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); padding: 14px 26px; border-radius: 12px; font-size: 22px; font-weight: 700; letter-spacing: 1px; background: rgba(0,0,0,.72); border: 1px solid var(--line); display: none; text-align: center; pointer-events: none; }
+  .banner small { display: block; font-size: 13px; font-weight: 500; color: var(--muted); letter-spacing: 0; margin-top: 4px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 11px; color: var(--muted); margin-top: 8px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  @media (max-width: 900px) { .side { width: 100%; } main { padding: 12px 16px; } }
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<header>
+  <div class="brand">
+    <b>Project <span>Pragyan</span> &middot; RL Mission Planner</b>
+    <small>Chandrayaan-3 lunar rover &middot; south-pole landing zone (simulation inspired by the mission)</small>
+  </div>
+  <span id="verify">verifying environment...</span>
+  <nav>
+    <button data-view="replay" class="on">Mission Replay</button>
+    <button data-view="compare">Head-to-Head</button>
+    <button data-view="live">Live: Drop a Crater</button>
+    <button data-view="score">Scoreboard</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ======================= REPLAY ======================= -->
+  <section class="view on" id="v-replay">
+    <div class="row">
+      <div class="card stage">
+        <div class="controls">
+          <select id="rp-ep"></select>
+          <button class="btn primary" id="rp-play">Pause</button>
+          <button class="btn" id="rp-restart">Restart</button>
+          <label class="hint" style="margin:0">speed <input type="range" id="rp-speed" min="1" max="12" value="4"></label>
+        </div>
+        <canvas class="world" id="rp-canvas"></canvas>
+        <div class="banner" id="rp-banner"></div>
+        <div class="legend">
+          <span><i style="background:#e74c3c"></i>LIBS site</span><span><i style="background:#3498db"></i>APXS site</span>
+          <span><i style="background:#111"></i>crater</span><span><i style="background:#555049"></i>boulder</span>
+          <span><i style="background:#8a857a"></i>slope</span><span><i style="background:#3a4560"></i>permanent shadow</span>
+          <span><i style="background:transparent;border:1px dashed #d4af37"></i>Vikram radio range</span>
+        </div>
+      </div>
+      <div class="side" id="rp-side"></div>
+    </div>
+  </section>
+
+  <!-- ======================= COMPARE ======================= -->
+  <section class="view" id="v-compare">
+    <div class="controls card" style="margin-bottom:14px">
+      <button class="btn primary" id="cp-play">Start both</button>
+      <button class="btn" id="cp-restart">Restart</button>
+      <label class="hint" style="margin:0">speed <input type="range" id="cp-speed" min="1" max="12" value="4"></label>
+      <span class="hint" style="margin:0 0 0 8px">Pick any two runs. Same map, same mission, different brains.</span>
+    </div>
+    <div class="row">
+      <div class="card compare-col" id="cp-a"></div>
+      <div class="card compare-col" id="cp-b"></div>
+    </div>
+  </section>
+
+  <!-- ======================= LIVE ======================= -->
+  <section class="view" id="v-live">
+    <div class="row">
+      <div class="card stage">
+        <div class="controls">
+          <select id="lv-map"></select>
+          <button class="btn primary" id="lv-play">Launch rover</button>
+          <button class="btn" id="lv-reset">Reset</button>
+          <button class="btn" id="lv-clear">Restore map</button>
+          <label class="hint" style="margin:0">speed <input type="range" id="lv-speed" min="1" max="12" value="3"></label>
+        </div>
+        <canvas class="world" id="lv-canvas" style="cursor:crosshair"></canvas>
+        <div class="banner" id="lv-banner"></div>
+        <div class="hint">Click a cell to drop a <b>crater</b>, shift-click for a <b>boulder</b>, click again to clear it. The DQN agent runs live in your browser and replans on every step. The cyan box is its 5x5 NavCam view, the only terrain it can see.</div>
+      </div>
+      <div class="side">
+        <div id="lv-side"></div>
+        <div class="card">
+          <h4>Agent's brain: Q(s, a) this step</h4>
+          <div class="qbars" id="lv-q"></div>
+          <div class="hint">Greyed actions are blocked by the onboard command filter (action masking).</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= SCORE ======================= -->
+  <section class="view" id="v-score">
+    <div class="card">
+      <h4 style="margin:0 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-size:12px">Frozen greedy policies, 500 evaluation missions each (5 seeds x 100), fixed landing zone</h4>
+      <table class="score" id="score"></table>
+      <div class="hint">Value Iteration knows the full transition model, so it is the optimal reference (upper bound), not a learner. Success = every sample relayed to Vikram and a safe hibernation at dusk.</div>
+    </div>
+  </section>
+</main>
+
+<script src="data.js"></script>
+<script>
+"use strict";
+const D = window.DATA, K = D.consts;
+const REGOLITH = 0, SLOPE = 1, BOULDER = 2, CRATER = 3, SHADOW = 4, VIKRAM = 5;
+const DIRS = [[-1,0],[-1,1],[0,1],[1,1],[1,0],[1,-1],[0,-1],[-1,-1]];
+const LIBS = 8, APXS = 9, TRANSMIT = 10, RECHARGE = 11, SLEEP = 12, NA = 13;
+const UNSAMPLED = 0, HELD = 1, SENT = 2;
+const ANAMES = D.actions;
+const PHASES = ["Morning", "Noon", "Dusk"];
+
+// ===================== environment port (mirrors pragyan/env.py) =====================
+function makeMap(md) {
+  const m = { terrain: md.terrain.map(r => r.slice()), sites: md.sites.map(s => s.slice()),
+              vikram: md.vikram.slice(), start: md.start.slice() };
+  m.H = m.terrain.length; m.W = m.terrain[0].length;
+  m.siteAt = new Map(m.sites.map((s, i) => [s[0] * 100 + s[1], i]));
+  return m;
+}
+const passable = (m, r, c) => r >= 0 && r < m.H && c >= 0 && c < m.W && m.terrain[r][c] !== BOULDER && m.terrain[r][c] !== VIKRAM;
+const inRange = (m, r, c) => Math.max(Math.abs(r - m.vikram[0]), Math.abs(c - m.vikram[1])) <= K.COMM_RADIUS;
+const startState = m => [m.start[0], m.start[1], K.MAX_BATTERY, m.sites.map(() => 0), 0];
+
+function outcomes(m, st, a) {
+  const [r, c, bat, sites, phase] = st, base = [];
+  if (a < 8) {
+    for (const [d, p] of [[a, 1 - K.SLIP_P], [(a + 7) % 8, K.SLIP_P / 2], [(a + 1) % 8, K.SLIP_P / 2]]) {
+      const nr = r + DIRS[d][0], nc = c + DIRS[d][1];
+      const ev = d !== a ? "slip" : "move";
+      if (!passable(m, nr, nc)) { base.push([p, [r, c, bat, sites, phase], K.R_STEP + K.R_BUMP, false, "blocked"]); continue; }
+      if (m.terrain[nr][nc] === CRATER) { base.push([p, null, K.R_STEP + K.R_CRATER, true, "crater", d]); continue; }
+      const slope = m.terrain[nr][nc] === SLOPE;
+      const rew = K.R_STEP + (slope ? K.R_SLOPE : 0), q = slope ? K.DRAIN_P_SLOPE : K.DRAIN_P;
+      base.push([p * (1 - q), [nr, nc, bat, sites, phase], rew, false, ev]);
+      if (bat - 1 <= 0) base.push([p * q, null, rew + K.R_DEAD, true, "battery_dead"]);
+      else base.push([p * q, [nr, nc, bat - 1, sites, phase], rew, false, ev]);
+    }
+  } else if (a === LIBS || a === APXS) {
+    const want = a === LIBS ? 0 : 1, i = m.siteAt.get(r * 100 + c);
+    const ok = i !== undefined && m.sites[i][2] === want && sites[i] === UNSAMPLED;
+    if (bat - 1 <= 0) base.push([1, null, K.R_STEP + K.R_DEAD, true, "battery_dead"]);
+    else if (ok) { const ns = sites.slice(); ns[i] = HELD; base.push([1, [r, c, bat - 1, ns, phase], K.R_STEP + K.R_SAMPLE, false, a === LIBS ? "libs_ok" : "apxs_ok"]); }
+    else base.push([1, [r, c, bat - 1, sites, phase], K.R_STEP + K.R_WRONG, false, "wrong_instrument"]);
+  } else if (a === TRANSMIT) {
+    const held = sites.filter(s => s === HELD).length;
+    if (bat - 1 <= 0) base.push([1, null, K.R_STEP + K.R_DEAD, true, "battery_dead"]);
+    else if (held && inRange(m, r, c)) base.push([1, [r, c, bat - 1, sites.map(s => s === HELD ? SENT : s), phase], K.R_STEP + K.R_SENT * held, false, "tx_ok"]);
+    else base.push([1, [r, c, bat - 1, sites, phase], K.R_STEP + K.R_WRONG, false, "tx_fail"]);
+  } else if (a === RECHARGE) {
+    if (m.terrain[r][c] === SHADOW) base.push([1, st, K.R_STEP, false, "recharge_shadow"]);
+    else base.push([1, [r, c, Math.min(K.MAX_BATTERY, bat + (phase === 1 ? 2 : 1)), sites, phase], K.R_STEP, false, "recharge"]);
+  } else {
+    const safe = phase === 2 && m.terrain[r][c] !== SHADOW && bat >= 3;
+    const bonus = safe && sites.every(s => s === SENT) ? K.R_MISSION : 0;
+    base.push([1, null, K.R_STEP + bonus + (safe ? K.R_SLEEP_SAFE : K.R_SLEEP_UNSAFE), true, safe ? "sleep_safe" : "sleep_unsafe"]);
+  }
+  const out = [];
+  for (const [p, ns, rew, term, ev, d] of base) {
+    if (term) { out.push([p, ns, rew, true, ev, d]); continue; }
+    out.push([p * (1 - K.PHASE_P), ns, rew, false, ev]);
+    if (ns[4] === 2) out.push([p * K.PHASE_P, ns, rew + K.R_NIGHT, true, "night"]);
+    else out.push([p * K.PHASE_P, [ns[0], ns[1], ns[2], ns[3], ns[4] + 1], rew, false, ev]);
+  }
+  return out;
+}
+
+function validActions(m, st) {
+  const [r, c, bat, sites, phase] = st, mask = new Array(NA).fill(false);
+  DIRS.forEach(([dr, dc], d) => { mask[d] = passable(m, r + dr, c + dc); });
+  const i = m.siteAt.get(r * 100 + c);
+  if (i !== undefined && sites[i] === UNSAMPLED) mask[m.sites[i][2] === 0 ? LIBS : APXS] = true;
+  mask[TRANSMIT] = sites.includes(HELD) && inRange(m, r, c);
+  mask[RECHARGE] = m.terrain[r][c] !== SHADOW && bat < K.MAX_BATTERY;
+  mask[SLEEP] = phase === 2;
+  if (!mask.some(Boolean)) mask[SLEEP] = true;
+  return mask;
+}
+
+function features(m, st) {
+  const [r, c, bat, sites, phase] = st, V = K.VIEW, f = new Float32Array(K.FEATURE_DIM);
+  let k = 0;
+  for (let dr = -V; dr <= V; dr++) for (let dc = -V; dc <= V; dc++) {
+    const rr = r + dr, cc = c + dc;
+    if (rr < 0 || rr >= m.H || cc < 0 || cc >= m.W) f[k] = 1;
+    else { const t = m.terrain[rr][cc];
+      if (t === BOULDER || t === VIKRAM) f[k] = 1; else if (t === CRATER) f[k + 1] = 1;
+      else if (t === SLOPE) f[k + 2] = 1; else if (t === SHADOW) f[k + 3] = 1; }
+    k += 4;
+  }
+  f[k++] = bat / K.MAX_BATTERY;
+  f[k + phase] = 1; k += 3;
+  m.sites.forEach(([sr, sc], i) => { f[k + sites[i]] = 1; f[k + 3] = (sr - r) / m.H; f[k + 4] = (sc - c) / m.W; k += 5; });
+  f[k] = (m.vikram[0] - r) / m.H; f[k + 1] = (m.vikram[1] - c) / m.W; f[k + 2] = inRange(m, r, c) ? 1 : 0; k += 3;
+  const i = m.siteAt.get(r * 100 + c);
+  if (i !== undefined && sites[i] === UNSAMPLED) f[k + m.sites[i][2]] = 1;
+  k += 2;
+  f[k] = m.terrain[r][c] === SHADOW ? 1 : 0;
+  return f;
+}
+
+function qnet(x) {                       // forward pass of the exported DQN
+  let h = x;
+  D.dqn.layers.forEach((L, li) => {
+    const out = new Float32Array(L.b.length);
+    for (let j = 0; j < L.b.length; j++) {
+      let s = L.b[j]; const w = L.W[j];
+      for (let i = 0; i < h.length; i++) s += w[i] * h[i];
+      out[j] = li < D.dqn.layers.length - 1 ? Math.max(0, s) : s;
+    }
+    h = out;
+  });
+  return h;
+}
+function dqnAct(m, st) {
+  const q = qnet(features(m, st)), mask = validActions(m, st);
+  let best = -1, bv = -Infinity;
+  for (let a = 0; a < NA; a++) if (mask[a] && q[a] > bv) { bv = q[a]; best = a; }
+  return { a: best, q, mask };
+}
+
+function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+const sameState = (a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[4] === b[4] && a[3].every((x, i) => x === b[3][i]);
+
+// ===================== self-check against the Python environment =====================
+function verify() {
+  let n = 0, bad = 0;
+  const fixed = makeMap(D.map);
+  for (const key in D.episodes) {
+    const E = D.episodes[key], m = E.map ? makeMap(E.map) : fixed;
+    let st = startState(m);
+    for (const f of E.frames) {
+      const a = f[5], next = [f[0], f[1], f[2], f[3], f[4]];
+      const ok = outcomes(m, st, a).some(o => o[4] === f[7] && Math.abs(o[2] - f[6]) < 1e-6 &&
+        (o[1] ? sameState(o[1], next) : sameState(st, next)));
+      n++; if (!ok) { bad++; if (bad < 5) console.warn("transition mismatch", key, st, a, f); }
+      st = next;
+    }
+  }
+  let nd = 0, badd = 0, maxdiff = 0;
+  for (const ch of D.dqn.checks) {
+    const st = [ch.state[0], ch.state[1], ch.state[2], ch.state[3], ch.state[4]];
+    const f = features(fixed, st);
+    ch.features.forEach((v, i) => { maxdiff = Math.max(maxdiff, Math.abs(v - f[i])); });
+    nd++; if (dqnAct(fixed, st).a !== ch.action) badd++;
+  }
+  const el = document.getElementById("verify");
+  const good = bad === 0 && badd === 0 && maxdiff < 1e-4;
+  el.className = good ? "ok" : "bad";
+  el.textContent = good ? `✓ JS environment verified: ${n} transitions, ${nd} DQN decisions match Python`
+                        : `✗ mismatch: ${bad}/${n} transitions, ${badd}/${nd} DQN actions`;
+  console.log(`[verify] transitions ${n - bad}/${n} ok, DQN actions ${nd - badd}/${nd} ok, max feature diff ${maxdiff}`);
+}
+
+// ===================== rendering =====================
+const TERR_COL = ["#b5b1a9", "#99938a", "#555049", "#1b1917", "#3a4560", "#d4af37"];
+function hash(r, c, k) { let h = (r * 73856093) ^ (c * 19349663) ^ (k * 83492791); h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+
+function drawTerrain(ctx, m, S) {
+  const W = m.W * S, H = m.H * S;
+  ctx.fillStyle = "#aaa59c"; ctx.fillRect(0, 0, W, H);
+  // regolith speckle
+  for (let r = 0; r < m.H; r++) for (let c = 0; c < m.W; c++) {
+    const t = m.terrain[r][c];
+    const base = t === SLOPE ? [150, 144, 134] : [178, 174, 166];
+    const j = (hash(r, c, 1) - .5) * 14;
+    ctx.fillStyle = `rgb(${base[0] + j},${base[1] + j},${base[2] + j})`;
+    ctx.fillRect(c * S, r * S, S + 1, S + 1);
+    for (let k = 0; k < 26; k++) {
+      const x = c * S + hash(r, c, k * 3 + 2) * S, y = r * S + hash(r, c, k * 3 + 3) * S, s = hash(r, c, k * 3 + 4);
+      ctx.fillStyle = s > .5 ? "rgba(255,255,255,.10)" : "rgba(0,0,0,.10)";
+      ctx.fillRect(x, y, 1 + s * 1.6, 1 + s * 1.6);
+    }
+    if (t === SLOPE) {             // contour lines
+      ctx.strokeStyle = "rgba(60,55,48,.35)"; ctx.lineWidth = 1;
+      for (let k = 1; k < 4; k++) { ctx.beginPath(); ctx.moveTo(c * S, r * S + k * S / 4 + hash(r, c, k) * 3); ctx.quadraticCurveTo(c * S + S / 2, r * S + k * S / 4 - 4, c * S + S, r * S + k * S / 4 + 2); ctx.stroke(); }
+    }
+  }
+  // small decorative craterlets
+  for (let r = 0; r < m.H; r++) for (let c = 0; c < m.W; c++) if (hash(r, c, 99) < .18 && m.terrain[r][c] === REGOLITH) {
+    const x = c * S + (.2 + .6 * hash(r, c, 7)) * S, y = r * S + (.2 + .6 * hash(r, c, 8)) * S, rad = S * (.05 + .07 * hash(r, c, 9));
+    ctx.fillStyle = "rgba(0,0,0,.18)"; ctx.beginPath(); ctx.arc(x + 1, y + 1, rad, 0, 7); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.18)"; ctx.beginPath(); ctx.arc(x - 1, y - 1, rad * .8, 0, 7); ctx.fill();
+  }
+  for (let r = 0; r < m.H; r++) for (let c = 0; c < m.W; c++) {
+    const t = m.terrain[r][c], x = c * S + S / 2, y = r * S + S / 2;
+    if (t === CRATER) {
+      const g = ctx.createRadialGradient(x + S * .08, y + S * .08, S * .05, x, y, S * .5);
+      g.addColorStop(0, "#050404"); g.addColorStop(.7, "#2a2622"); g.addColorStop(1, "rgba(60,55,50,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, S * .52, 0, 7); ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.lineWidth = S * .06;
+      ctx.beginPath(); ctx.arc(x, y, S * .42, Math.PI * .9, Math.PI * 1.7); ctx.stroke();
+    } else if (t === BOULDER) {
+      ctx.fillStyle = "rgba(0,0,0,.35)"; blob(ctx, x + S * .08, y + S * .1, S * .36, r, c);
+      const g = ctx.createRadialGradient(x - S * .12, y - S * .12, 2, x, y, S * .4);
+      g.addColorStop(0, "#8d877d"); g.addColorStop(1, "#3d3833");
+      ctx.fillStyle = g; blob(ctx, x, y, S * .34, r, c);
+    }
+  }
+  // permanent shadow region
+  for (let r = 0; r < m.H; r++) for (let c = 0; c < m.W; c++) if (m.terrain[r][c] === SHADOW) {
+    ctx.fillStyle = "rgba(10,18,45,.55)"; ctx.fillRect(c * S, r * S, S + .5, S + .5);
+  }
+  // Vikram lander
+  const [vr, vc] = m.vikram; drawVikram(ctx, vc * S + S / 2, vr * S + S / 2, S);
+}
+function blob(ctx, x, y, R, r, c) {
+  ctx.beginPath();
+  for (let k = 0; k <= 10; k++) { const a = k / 10 * Math.PI * 2, rr = R * (.8 + .3 * hash(r, c, 40 + k % 10)); const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr * .85; k ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+  ctx.closePath(); ctx.fill();
+}
+function drawVikram(ctx, x, y, S) {
+  ctx.save(); ctx.translate(x, y);
+  ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.beginPath(); ctx.ellipse(S * .06, S * .1, S * .5, S * .38, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = "#ccc"; ctx.lineWidth = 2;
+  for (const [dx, dy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { ctx.beginPath(); ctx.moveTo(dx * S * .18, dy * S * .18); ctx.lineTo(dx * S * .42, dy * S * .42); ctx.stroke(); ctx.fillStyle = "#ddd"; ctx.beginPath(); ctx.arc(dx * S * .42, dy * S * .42, S * .05, 0, 7); ctx.fill(); }
+  const g = ctx.createLinearGradient(-S * .25, -S * .25, S * .25, S * .25); g.addColorStop(0, "#f7d774"); g.addColorStop(1, "#a67c1a");
+  ctx.fillStyle = g; ctx.fillRect(-S * .26, -S * .26, S * .52, S * .52);
+  ctx.fillStyle = "#1d2a4a"; ctx.fillRect(-S * .2, -S * .34, S * .4, S * .1);
+  ctx.fillStyle = "#fff"; ctx.font = `bold ${Math.round(S * .2)}px sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("V", 0, S * .02);
+  ctx.restore();
+}
+function drawRover(ctx, x, y, S, ang, opts = {}) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(ang); const s = S * (opts.scale || 1);
+  ctx.globalAlpha = opts.alpha ?? 1;
+  ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(-s * .3 + 3, -s * .24 + 4, s * .6, s * .5);
+  ctx.fillStyle = "#222";
+  for (const dx of [-.22, 0, .22]) for (const dy of [-.26, .26]) { ctx.beginPath(); ctx.ellipse(dx * s, dy * s, s * .08, s * .05, 0, 0, 7); ctx.fill(); }
+  ctx.fillStyle = opts.dead ? "#777" : "#e8e3d6"; ctx.fillRect(-s * .27, -s * .2, s * .54, s * .4);
+  const g = ctx.createLinearGradient(-s * .2, 0, s * .2, 0);
+  const glow = opts.charging ? 1 : 0;
+  g.addColorStop(0, glow ? "#ffe680" : "#1f3d8a"); g.addColorStop(1, glow ? "#ffb300" : "#2f62d6");
+  ctx.fillStyle = opts.dead ? "#444" : g; ctx.fillRect(-s * .23, -s * .16, s * .3, s * .32);
+  ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.lineWidth = 1;
+  for (let k = 1; k < 3; k++) { ctx.beginPath(); ctx.moveTo(-s * .23 + k * s * .1, -s * .16); ctx.lineTo(-s * .23 + k * s * .1, s * .16); ctx.stroke(); }
+  ctx.fillStyle = opts.dead ? "#555" : "#ff9933"; ctx.beginPath(); ctx.arc(s * .18, 0, s * .07, 0, 7); ctx.fill();   // NavCam mast
+  ctx.fillStyle = "#111"; ctx.fillRect(s * .22, -s * .03, s * .06, s * .06);
+  if (opts.charging) { ctx.globalAlpha = .45; ctx.fillStyle = "#ffd54a"; ctx.beginPath(); ctx.arc(-s * .08, 0, s * .4, 0, 7); ctx.fill(); }
+  ctx.restore();
+}
+
+// ===================== a mission player (one canvas + HUD) =====================
+class Player {
+  constructor(canvas, banner, hud) {
+    this.cv = canvas; this.ctx = canvas.getContext("2d"); this.banner = banner; this.hud = hud;
+    this.speed = 4; this.playing = false; this.effects = []; this.onDone = null;
+  }
+  setSize(px) {
+    const dpr = window.devicePixelRatio || 1;
+    this.px = px; this.cv.style.width = px + "px"; this.cv.style.height = px + "px";
+    this.cv.width = px * dpr; this.cv.height = px * dpr; this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (this.m) this.prerender();
+  }
+  load(m, steps, opts = {}) {      // steps: [{a, prev, next, rew, ev, term, d}] or a generator for live mode
+    this.m = m; this.steps = steps; this.live = !!opts.live; this.policy = opts.policy;
+    this.state = startState(m); this.i = 0; this.t = 0; this.score = 0; this.done = false;
+    this.track = [[m.start[0], m.start[1]]]; this.effects = []; this.heading = 0; this.lastEv = null;
+    this.cur = null; this.banner.style.display = "none"; this.prerender();
+    if (this.hud) { this.hud.clear(); this.hud.update(this); }
+  }
+  prerender() {
+    const S = this.px / this.m.W;
+    this.S = S; this.bg = document.createElement("canvas");
+    const dpr = window.devicePixelRatio || 1;
+    this.bg.width = this.px * dpr; this.bg.height = this.px * dpr;
+    const b = this.bg.getContext("2d"); b.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawTerrain(b, this.m, S);
+  }
+  nextStep() {
+    if (this.live) return this.policy(this);
+    return this.steps[this.i];
+  }
+  advance(dt) {
+    if (!this.playing || this.done) return;
+    const dur = 900 / this.speed;
+    if (!this.cur) {
+      this.cur = this.nextStep();
+      if (!this.cur) { this.finish(); return; }
+      this.t = 0; this.onStart(this.cur);
+    }
+    this.t += dt / dur;
+    if (this.t >= 1) {
+      const st = this.cur; this.state = st.next; this.score += st.rew; this.i++;
+      if (st.next[0] !== this.track[this.track.length - 1][0] || st.next[1] !== this.track[this.track.length - 1][1]) this.track.push([st.next[0], st.next[1]]);
+      if (this.hud) this.hud.update(this);
+      this.cur = null;
+      if (st.term || (!this.live && this.i >= this.steps.length) || this.i >= K.MAX_STEPS) this.finish(st);
+    }
+  }
+  onStart(st) {
+    const now = performance.now(), [r, c] = st.prev;
+    if (st.a < 8 && (st.next[0] !== r || st.next[1] !== c)) this.heading = Math.atan2(st.next[0] - r, st.next[1] - c);
+    if (st.ev === "crater") { const d = st.d ?? st.a; this.heading = Math.atan2(DIRS[d][0], DIRS[d][1]); }
+    const fx = { libs_ok: "laser", apxs_ok: "xray", tx_ok: "radio", recharge: "charge", slip: "dust", wrong_instrument: "laser", tx_fail: "radiofail" }[st.ev];
+    if (fx) this.effects.push({ kind: fx, t0: now, r, c, ok: st.ev !== "wrong_instrument" });
+    if (this.hud) this.hud.log(this.i + 1, st);
+  }
+  finish(st) {
+    this.done = true; this.playing = false;
+    const ev = st ? st.ev : this.lastEv;
+    const msg = {
+      sleep_safe: this.state[3].every(s => s === SENT) ? ["MISSION COMPLETE", "All science relayed. Good night, Pragyan.", "#6dffa8"] : ["HIBERNATING", "Safe sleep, but some science was left behind.", "#ffcc66"],
+      sleep_unsafe: ["UNSAFE HIBERNATION", "Slept in shadow / low battery: rover will not wake.", "#ff7b7b"],
+      crater: ["MISSION LOST", "Rover fell into a crater.", "#ff5050"],
+      battery_dead: ["BATTERY DEPLETED", "Power system failure.", "#ff5050"],
+      night: ["LUNAR NIGHT", "Caught awake at -170 °C.", "#ff7b7b"],
+    }[ev] || ["EPISODE END", "Step limit reached.", "#ccc"];
+    this.endEv = ev;
+    this.banner.innerHTML = `<span style="color:${msg[2]}">${msg[0]}</span><small>${msg[1]} &middot; score ${this.score.toFixed(0)}</small>`;
+    this.banner.style.display = "block";
+    if (this.hud && this.hud.setPlaying) this.hud.setPlaying(false);
+    if (this.onDone) this.onDone(this);
+  }
+  draw(now) {
+    if (!this.m) return;
+    const ctx = this.ctx, S = this.S, px = this.px;
+    ctx.clearRect(0, 0, px, px);
+    ctx.drawImage(this.bg, 0, 0, px, px);
+    const phase = (this.cur ? this.cur.prev : this.state)[4];
+    // sunlight tint by phase
+    ctx.fillStyle = ["rgba(255,180,120,.06)", "rgba(255,255,255,0)", "rgba(255,120,40,.12)"][phase] || "rgba(0,0,40,.5)";
+    ctx.fillRect(0, 0, px, px);
+    if (this.done && this.endEv === "night") { ctx.fillStyle = "rgba(0,5,25,.55)"; ctx.fillRect(0, 0, px, px); }
+    // radio range
+    const [vr, vc] = this.m.vikram, R = K.COMM_RADIUS;
+    ctx.save(); ctx.setLineDash([6, 5]); ctx.lineDashOffset = -now / 60;
+    ctx.strokeStyle = `rgba(212,175,55,${.55 + .25 * Math.sin(now / 400)})`; ctx.lineWidth = 1.6;
+    ctx.strokeRect((vc - R) * S + 1, (vr - R) * S + 1, (2 * R + 1) * S - 2, (2 * R + 1) * S - 2); ctx.restore();
+    // science sites
+    const sites = (this.cur ? this.cur.prev : this.state)[3];
+    this.m.sites.forEach(([r, c, typ], i) => {
+      const x = c * S + S / 2, y = r * S + S / 2, st = sites[i];
+      ctx.save();
+      if (st === UNSAMPLED) { ctx.globalAlpha = .55 + .35 * Math.sin(now / 300 + i); }
+      ctx.strokeStyle = typ === 0 ? "#ff5a4a" : "#4aa3ff"; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.arc(x, y, S * .33, 0, 7); ctx.stroke();
+      ctx.fillStyle = st === SENT ? "#2ecc71" : st === HELD ? "#ffb300" : (typ === 0 ? "rgba(255,90,74,.35)" : "rgba(74,163,255,.35)");
+      ctx.beginPath(); ctx.arc(x, y, S * .22, 0, 7); ctx.fill();
+      ctx.globalAlpha = 1; ctx.fillStyle = "#fff"; ctx.font = `bold ${Math.round(S * .2)}px sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(st === SENT ? "✓" : typ === 0 ? "L" : "A", x, y + 1);
+      ctx.restore();
+    });
+    // wheel tracks
+    let pos = this.roverPos();
+    const pts = this.track.map(([r, c]) => [c * S + S / 2, r * S + S / 2]);
+    if (this.cur && this.cur.a < 8 && !this.cur.term) pts.push(pos);
+    ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
+    for (const off of [-S * .12, S * .12]) {
+      ctx.strokeStyle = "rgba(60,55,50,.55)"; ctx.lineWidth = Math.max(2, S * .06); ctx.setLineDash([S * .08, S * .05]);
+      ctx.beginPath();
+      pts.forEach(([x, y], k) => { const n = pts[Math.min(k + 1, pts.length - 1)], p = pts[Math.max(k - 1, 0)]; const ang = Math.atan2(n[1] - p[1], n[0] - p[0]) + Math.PI / 2; const X = x + Math.cos(ang) * off, Y = y + Math.sin(ang) * off; k ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
+      ctx.stroke();
+    }
+    ctx.restore();
+    // NavCam window (live mode)
+    if (this.live) {
+      const [r, c] = this.cur ? this.cur.prev : this.state;
+      ctx.strokeStyle = "rgba(0,229,255,.8)"; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+      ctx.strokeRect((c - K.VIEW) * S, (r - K.VIEW) * S, (2 * K.VIEW + 1) * S, (2 * K.VIEW + 1) * S); ctx.setLineDash([]);
+    }
+    // effects
+    this.effects = this.effects.filter(e => now - e.t0 < 1400);
+    for (const e of this.effects) this.drawEffect(e, now, pos);
+    // rover
+    const opts = { charging: this.cur && this.cur.ev === "recharge", dead: this.done && ["battery_dead", "night"].includes(this.endEv) };
+    if (this.cur && this.cur.ev === "crater") { opts.scale = Math.max(.15, 1 - this.t * .9); opts.alpha = 1 - this.t * .6; }
+    if (this.done && this.endEv === "crater") { opts.scale = .15; opts.alpha = .3; }
+    if (this.done && this.endEv && this.endEv.startsWith("sleep")) { opts.alpha = .85; }
+    drawRover(ctx, pos[0], pos[1], S, this.heading, opts);
+    if (this.done && this.endEv === "sleep_safe") { ctx.fillStyle = "#cfe3ff"; ctx.font = `${Math.round(S * .4)}px sans-serif`; ctx.textAlign = "center"; ctx.fillText("z z", pos[0] + S * .4, pos[1] - S * .45); }
+  }
+  roverPos() {
+    const S = this.S;
+    if (!this.cur) return [this.state[1] * S + S / 2, this.state[0] * S + S / 2];
+    const [r0, c0] = this.cur.prev; let [r1, c1] = this.cur.next;
+    if (this.cur.ev === "crater") { const d = this.cur.d ?? this.cur.a; r1 = r0 + DIRS[d][0] * .9; c1 = c0 + DIRS[d][1] * .9; }
+    if (this.cur.ev === "blocked") { const k = Math.sin(this.t * Math.PI) * .25; const d = this.cur.a; r1 = r0 + DIRS[d][0] * k; c1 = c0 + DIRS[d][1] * k; return [c1 * S + S / 2, r1 * S + S / 2]; }
+    const e = this.t < .5 ? 2 * this.t * this.t : 1 - Math.pow(-2 * this.t + 2, 2) / 2;
+    return [(c0 + (c1 - c0) * e) * S + S / 2, (r0 + (r1 - r0) * e) * S + S / 2];
+  }
+  drawEffect(e, now, pos) {
+    const ctx = this.ctx, S = this.S, k = (now - e.t0) / 1400, x = e.c * S + S / 2, y = e.r * S + S / 2;
+    ctx.save();
+    if (e.kind === "laser") {
+      ctx.strokeStyle = `rgba(255,40,40,${1 - k})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y - S * .9); ctx.lineTo(x, y); ctx.stroke();
+      for (let i = 0; i < 14; i++) { const a = i / 14 * 6.28 + e.t0, d = k * S * .6 * (0.5 + hash(i, 1, e.t0 % 97)); ctx.fillStyle = e.ok ? `rgba(255,${180 + i * 5},80,${1 - k})` : `rgba(160,160,160,${1 - k})`; ctx.fillRect(x + Math.cos(a) * d, y + Math.sin(a) * d, 3, 3); }
+      if (e.ok) { ctx.fillStyle = `rgba(255,220,120,${1 - k})`; ctx.font = `bold ${Math.round(S * .28)}px sans-serif`; ctx.textAlign = "center"; ctx.fillText("S  Al  Ca  Fe", x, y - S * (.9 + k * .5)); }
+    } else if (e.kind === "xray") {
+      for (let i = 0; i < 3; i++) { const kk = (k + i * .2) % 1; ctx.strokeStyle = `rgba(80,170,255,${1 - kk})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, S * .2 + kk * S * .7, 0, 7); ctx.stroke(); }
+      ctx.fillStyle = `rgba(150,210,255,${1 - k})`; ctx.font = `bold ${Math.round(S * .26)}px sans-serif`; ctx.textAlign = "center"; ctx.fillText("Mg  Si  Ti  O", x, y - S * (.9 + k * .5));
+    } else if (e.kind === "radio" || e.kind === "radiofail") {
+      const [vr, vc] = this.m.vikram, vx = vc * S + S / 2, vy = vr * S + S / 2;
+      const ok = e.kind === "radio";
+      ctx.strokeStyle = ok ? `rgba(110,255,170,${.8 - .6 * k})` : `rgba(255,90,90,${.8 - .6 * k})`; ctx.setLineDash([4, 6]); ctx.lineDashOffset = -now / 30; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ok ? vx : x + (vx - x) * .4, ok ? vy : y + (vy - y) * .4); ctx.stroke(); ctx.setLineDash([]);
+      for (let i = 0; i < 3; i++) { const kk = (k * 2 + i / 3) % 1; ctx.strokeStyle = ok ? `rgba(110,255,170,${1 - kk})` : `rgba(255,90,90,${1 - kk})`; ctx.beginPath(); ctx.arc(x, y, S * .2 + kk * S * .8, -2.4, -.7); ctx.stroke(); }
+    } else if (e.kind === "charge") {
+      ctx.fillStyle = `rgba(255,214,74,${1 - k})`; ctx.font = `bold ${Math.round(S * .32)}px sans-serif`; ctx.textAlign = "center"; ctx.fillText("+⚡", pos[0], pos[1] - S * (.5 + k * .4));
+    } else if (e.kind === "dust") {
+      for (let i = 0; i < 10; i++) { const a = hash(i, 3, 5) * 6.28, d = k * S * .5; ctx.fillStyle = `rgba(200,195,185,${.7 - .7 * k})`; ctx.beginPath(); ctx.arc(pos[0] + Math.cos(a) * d, pos[1] + Math.sin(a) * d, 3 + k * 4, 0, 7); ctx.fill(); }
+    }
+    ctx.restore();
+  }
+}
+
+// ===================== HUD + mission log =====================
+const EVTXT = {
+  move: ["Driving", "ev-dim"], slip: ["Wheel slip on loose regolith - veered off course", "ev-warn"],
+  blocked: ["Obstacle ahead - drive command rejected", "ev-warn"], crater: ["CRATER - rover lost!", "ev-bad"],
+  libs_ok: ["LIBS laser fired: Sulphur (S) detected", "ev-good"], apxs_ok: ["APXS spectrum: Mg, Al, Si, Ca, Ti, Fe", "ev-good"],
+  wrong_instrument: ["Instrument misuse - nothing measured", "ev-bad"], tx_ok: ["Data relayed to Earth via Vikram", "ev-good"],
+  tx_fail: ["Transmit failed - out of range / no data", "ev-bad"], recharge: ["Solar panel charging", "ev-info"],
+  recharge_shadow: ["No sunlight in permanent shadow - no charge", "ev-warn"],
+  sleep_safe: ["Parked in sunlight, payloads off - entering sleep mode", "ev-good"],
+  sleep_unsafe: ["Unsafe hibernation", "ev-bad"], battery_dead: ["Battery depleted", "ev-bad"],
+  night: ["Lunar night fell while awake", "ev-bad"],
+};
+class Hud {
+  constructor(root, opts = {}) {
+    this.root = root; this.compact = !!opts.compact;
+    root.innerHTML = this.compact ? `
+      <div class="mini-hud"><div>Battery<b class="h-bat"></b></div><div>Sun<b class="h-sun"></b></div><div>Relayed<b class="h-sent"></b></div><div>Score<b class="h-score"></b></div></div>
+      <div class="log h-log" style="height:150px;margin-top:8px"></div>` : `
+      <div class="card hud">
+        <h4>Rover telemetry</h4>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>Battery</span><span class="h-batt"></span></div>
+        <div class="meter"><div class="h-batbar"></div></div>
+        <div class="sun"><svg viewBox="0 0 300 54"><path d="M20 50 Q150 -12 280 50" fill="none" stroke="#23304d" stroke-width="2" stroke-dasharray="4 4"/><circle class="h-sundot" r="9" fill="#ffcc33"/><text x="20" y="50" fill="#56627e" font-size="10">sunrise</text><text x="240" y="50" fill="#56627e" font-size="10">sunset</text></svg></div>
+        <div class="sites h-sites"></div>
+        <div class="kv"><span>Lunar time</span><span class="h-sun"></span><span>Step</span><span class="h-step"></span><span>Distance driven</span><span class="h-dist"></span><span>Mission score</span><span class="h-score"></span></div>
+      </div>
+      <div class="card"><h4>Mission log</h4><div class="log h-log"></div></div>`;
+    this.$ = s => root.querySelector(s);
+  }
+  clear() { this.$(".h-log").innerHTML = ""; }
+  update(p) {
+    const [, , bat, sites, phase] = p.state;
+    if (this.compact) {
+      this.$(".h-bat").textContent = `${bat}/${K.MAX_BATTERY}`;
+      this.$(".h-sun").textContent = PHASES[phase];
+      this.$(".h-sent").textContent = `${sites.filter(s => s === SENT).length}/${sites.length}`;
+      this.$(".h-score").textContent = p.score.toFixed(0);
+      return;
+    }
+    const pct = bat / K.MAX_BATTERY * 100;
+    this.$(".h-batbar").style.width = pct + "%";
+    this.$(".h-batbar").style.background = pct > 50 ? "var(--green)" : pct > 25 ? "#f1c40f" : "var(--red)";
+    this.$(".h-batt").textContent = `${bat} / ${K.MAX_BATTERY}`;
+    const sx = [70, 150, 230][phase], sy = [30, 10, 30][phase];
+    this.$(".h-sundot").setAttribute("cx", sx); this.$(".h-sundot").setAttribute("cy", sy);
+    this.$(".h-sundot").setAttribute("fill", ["#ffd27a", "#fff3b0", "#ff8c42"][phase]);
+    this.$(".h-sun").textContent = PHASES[phase];
+    this.$(".h-step").textContent = p.i;
+    this.$(".h-dist").textContent = `${(p.track.length - 1)} m`;
+    this.$(".h-score").textContent = p.score.toFixed(0);
+    this.$(".h-sites").innerHTML = p.m.sites.map(([, , typ], i) => {
+      const st = sites[i]; return `<div class="site ${st === SENT ? "sent" : st === HELD ? "held" : ""}">${typ === 0 ? "LIBS" : "APXS"} ${i % 2 + 1}<br>${["pending", "held", "relayed"][st]}</div>`;
+    }).join("");
+  }
+  note(txt) {
+    const el = this.$(".h-log"), line = document.createElement("div");
+    line.innerHTML = `<span class="t">MCC </span><span class="ev-warn">${txt}</span>`;
+    el.appendChild(line); el.scrollTop = el.scrollHeight;
+  }
+  log(step, st) {
+    const el = this.$(".h-log"), [txt, cls] = EVTXT[st.ev] || [st.ev, ""];
+    if (st.ev === "move" && this.compact) return;
+    const line = document.createElement("div");
+    const r = st.rew >= 0 ? `+${st.rew.toFixed(0)}` : st.rew.toFixed(0);
+    line.innerHTML = `<span class="t">T+${String(step).padStart(3, "0")}</span> <b>${ANAMES[st.a].padEnd(8)}</b> <span class="${cls}">${txt}</span> <span class="t">${r}</span>`;
+    el.appendChild(line); el.scrollTop = el.scrollHeight;
+  }
+}
+
+// ===================== episode data -> steps =====================
+function buildSteps(E, m) {
+  let st = startState(m); const out = [];
+  for (const f of E.frames) {
+    const next = [f[0], f[1], f[2], f[3], f[4]];
+    let d;
+    if (f[7] === "crater") { for (const dd of [f[5], (f[5] + 7) % 8, (f[5] + 1) % 8]) { const r = st[0] + DIRS[dd][0], c = st[1] + DIRS[dd][1]; if (r >= 0 && r < m.H && c >= 0 && c < m.W && m.terrain[r][c] === CRATER) { d = dd; break; } } }
+    out.push({ a: f[5], prev: st, next, rew: f[6], ev: f[7], term: ["crater", "battery_dead", "night", "sleep_safe", "sleep_unsafe"].includes(f[7]), d });
+    st = next;
+  }
+  return out;
+}
+function episodeOptions(sel, filter = () => true, preferred) {
+  const groups = {};
+  for (const [k, E] of Object.entries(D.episodes)) if (filter(k, E)) (groups[E.agent] = groups[E.agent] || []).push([k, E]);
+  const order = ["Q-learning", "SARSA", "Dyna-Q (k=10)", "n-step SARSA (n=4)", "Monte Carlo", "DQN", "Value Iteration", "Heuristic", "Random"];
+  sel.innerHTML = order.filter(a => groups[a]).map(a => `<optgroup label="${a}">${groups[a].map(([k, E]) => `<option value="${k}">${E.label}</option>`).join("")}</optgroup>`).join("");
+  if (preferred && D.episodes[preferred]) sel.value = preferred;
+}
+
+// ===================== app wiring =====================
+const fixedMap = makeMap(D.map);
+const players = [];
+function sizeFor(el, frac = 1, max = 864) {
+  const avail = Math.min(window.innerWidth - (window.innerWidth > 900 ? 420 : 60), window.innerHeight - 190);
+  return Math.max(300, Math.min(max, Math.floor(avail * frac / 12) * 12));
+}
+
+// Replay
+const rp = new Player(document.getElementById("rp-canvas"), document.getElementById("rp-banner"), new Hud(document.getElementById("rp-side")));
+players.push(rp);
+const rpSel = document.getElementById("rp-ep");
+episodeOptions(rpSel, () => true, "Q-learning|final0");
+function rpLoad() { const E = D.episodes[rpSel.value], m = E.map ? makeMap(E.map) : fixedMap; rp.load(m, buildSteps(E, m)); rp.playing = true; rpBtn.textContent = "Pause"; }
+const rpBtn = document.getElementById("rp-play");
+rp.hud.setPlaying = v => { rpBtn.textContent = v ? "Pause" : "Play"; };
+rpBtn.onclick = () => { if (rp.done) rpLoad(); else { rp.playing = !rp.playing; rpBtn.textContent = rp.playing ? "Pause" : "Play"; } };
+document.getElementById("rp-restart").onclick = rpLoad;
+rpSel.onchange = rpLoad;
+document.getElementById("rp-speed").oninput = e => { rp.speed = +e.target.value; };
+
+// Compare
+function makeCompareCol(root, pref) {
+  root.innerHTML = `<div class="controls"><select style="flex:1"></select></div><div class="stage"><canvas class="world"></canvas><div class="banner"></div></div><div class="hudroot"></div>`;
+  const sel = root.querySelector("select");
+  episodeOptions(sel, (k, E) => !E.map, pref);
+  const p = new Player(root.querySelector("canvas"), root.querySelector(".banner"), new Hud(root.querySelector(".hudroot"), { compact: true }));
+  p.sel = sel; players.push(p);
+  sel.onchange = () => cpLoad();
+  return p;
+}
+const cpA = makeCompareCol(document.getElementById("cp-a"), "Heuristic|final0");
+const cpB = makeCompareCol(document.getElementById("cp-b"), "Q-learning|final0");
+function cpLoad(play = false) { for (const p of [cpA, cpB]) { const E = D.episodes[p.sel.value]; p.load(fixedMap, buildSteps(E, fixedMap)); p.playing = play; } }
+document.getElementById("cp-play").onclick = () => { if (cpA.done && cpB.done) cpLoad(true); else for (const p of [cpA, cpB]) if (!p.done) p.playing = true; };
+document.getElementById("cp-restart").onclick = () => cpLoad(true);
+document.getElementById("cp-speed").oninput = e => { cpA.speed = cpB.speed = +e.target.value; };
+
+// Live
+const lv = new Player(document.getElementById("lv-canvas"), document.getElementById("lv-banner"), new Hud(document.getElementById("lv-side")));
+players.push(lv); lv.speed = 3;
+const lvSel = document.getElementById("lv-map");
+const liveMaps = [["Landing zone (training map)", D.map]];
+Object.values(D.episodes).filter(E => E.map && E.agent === "DQN").forEach((E, i) => liveMaps.push([`Unseen hazard map ${i + 1}`, E.map]));
+lvSel.innerHTML = liveMaps.map(([n], i) => `<option value="${i}">${n}</option>`).join("");
+let lvMap, lvRng = mulberry32(Date.now() & 0xffff);
+function livePolicy(p) {
+  const st = p.state, { a, q, mask } = dqnAct(p.m, st);
+  showQ(q, mask, a);
+  const outs = outcomes(p.m, st, a);
+  let u = lvRng(), o = outs[outs.length - 1];
+  for (const x of outs) { u -= x[0]; if (u < 0) { o = x; break; } }
+  const next = o[1] ? o[1] : st;
+  return { a, prev: st, next, rew: o[2], ev: o[4], term: o[3], d: o[5] };
+}
+function lvLoad(fresh) {
+  if (fresh || !lvMap) lvMap = makeMap(liveMaps[+lvSel.value][1]);
+  lv.load(lvMap, null, { live: true, policy: livePolicy });
+  const { q, mask, a } = dqnAct(lvMap, lv.state); showQ(q, mask, a);
+  lvBtn.textContent = "Launch rover";
+}
+const lvBtn = document.getElementById("lv-play");
+lv.hud.setPlaying = v => { lvBtn.textContent = v ? "Pause" : "Launch rover"; };
+lvBtn.onclick = () => { if (lv.done) lvLoad(false); lv.playing = !lv.playing; lvBtn.textContent = lv.playing ? "Pause" : "Resume"; };
+document.getElementById("lv-reset").onclick = () => lvLoad(false);
+document.getElementById("lv-clear").onclick = () => lvLoad(true);
+lvSel.onchange = () => lvLoad(true);
+document.getElementById("lv-speed").oninput = e => { lv.speed = +e.target.value; };
+document.getElementById("lv-canvas").addEventListener("click", e => {
+  const rect = e.target.getBoundingClientRect(), S = lv.px / lvMap.W;
+  const c = Math.floor((e.clientX - rect.left) / S), r = Math.floor((e.clientY - rect.top) / S);
+  if (r < 0 || c < 0 || r >= lvMap.H || c >= lvMap.W) return;
+  const t = lvMap.terrain[r][c];
+  const occupied = t === VIKRAM || lvMap.siteAt.has(r * 100 + c) || (lv.state[0] === r && lv.state[1] === c) || (lv.cur && lv.cur.next[0] === r && lv.cur.next[1] === c);
+  if (occupied) return;
+  const want = e.shiftKey ? BOULDER : CRATER;
+  lvMap.terrain[r][c] = t === want ? REGOLITH : want;
+  lv.prerender();
+  lv.hud.note(lvMap.terrain[r][c] === REGOLITH ? `Hazard at (${r}, ${c}) cleared` : `New ${want === CRATER ? "crater" : "boulder"} at (${r}, ${c}) - agent replanning`);
+  if (!lv.cur) { const { q, mask, a } = dqnAct(lvMap, lv.state); showQ(q, mask, a); }
+});
+function showQ(q, mask, best) {
+  const vals = [...q].filter((_, i) => mask[i]), lo = Math.min(...vals), hi = Math.max(...vals);
+  document.getElementById("lv-q").innerHTML = ANAMES.map((n, i) => {
+    const w = mask[i] ? Math.max(4, (q[i] - lo) / ((hi - lo) || 1) * 100) : 0;
+    return `<span class="${i === best ? "best" : mask[i] ? "" : "masked"}">${n}</span><div class="bar ${mask[i] ? "" : "masked"}"><div style="width:${w}%;background:${i === best ? "var(--accent)" : "var(--blue)"}"></div></div><span class="${mask[i] ? "" : "masked"}" style="text-align:right">${mask[i] ? q[i].toFixed(1) : "-"}</span>`;
+  }).join("");
+}
+
+// Scoreboard
+(function score() {
+  const rows = Object.entries(D.table);
+  const order = ["Value Iteration", "Q-learning", "SARSA", "Dyna-Q (k=10)", "n-step SARSA (n=4)", "Monte Carlo", "DQN", "Heuristic", "Random"];
+  rows.sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
+  const learners = rows.filter(([n]) => !["Value Iteration", "Heuristic", "Random"].includes(n));
+  const bestL = learners.reduce((b, r) => (r[1].return_mean > b[1].return_mean ? r : b), learners[0])[0];
+  const pct = v => (100 * v).toFixed(1) + "%";
+  document.getElementById("score").innerHTML = `<tr><th>Agent</th><th>Avg return</th><th>Success</th><th>Samples relayed</th><th>Crater</th><th>Battery dead</th><th>Night</th><th>Avg steps</th><th>Training</th></tr>` +
+    rows.map(([n, r]) => `<tr class="${n === bestL ? "best" : ""}"><td>${n}${n === "Value Iteration" ? " (optimal, model-based)" : ""}${n === bestL ? " ★ best learner" : ""}</td><td>${r.return_mean.toFixed(1)} ± ${r.return_std_seeds.toFixed(1)}</td><td>${pct(r.success_rate)}</td><td>${r.sent_mean.toFixed(2)} / 4</td><td>${pct(r.crater_rate)}</td><td>${pct(r.battery_rate)}</td><td>${pct(r.night_rate)}</td><td>${r.steps_mean.toFixed(0)}</td><td>${r.episodes ? r.episodes.toLocaleString() + " ep" : n === "DQN" ? "1M steps" : "-"}${r.train_time_s ? " / " + r.train_time_s.toFixed(0) + " s" : ""}</td></tr>`).join("");
+})();
+
+// tabs
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + b.dataset.view));
+  for (const p of players) p.playing = false;
+  layout();
+});
+function layout() {
+  rp.setSize(sizeFor()); lv.setSize(sizeFor());
+  const half = Math.max(300, Math.min(560, Math.floor((window.innerWidth - 110) / 2 / 12) * 12));
+  cpA.setSize(Math.min(half, window.innerHeight - 330)); cpB.setSize(Math.min(half, window.innerHeight - 330));
+}
+window.addEventListener("resize", layout);
+
+// starfield
+(function stars() {
+  const c = document.getElementById("stars"), x = c.getContext("2d");
+  function draw() { c.width = innerWidth; c.height = innerHeight; for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(255,255,255,${Math.random() * .7})`; x.fillRect(Math.random() * c.width, Math.random() * c.height, Math.random() * 1.6, Math.random() * 1.6); } }
+  draw(); addEventListener("resize", draw);
+})();
+
+layout();
+rpLoad();
+cpLoad(false);
+lvLoad(true);
+verify();
+let last = performance.now();
+(function loop(now) {
+  const dt = Math.min(100, now - last); last = now;
+  for (const p of players) { p.advance(dt); p.draw(now); }
+  requestAnimationFrame(loop);
+})(last);
+</script>
+</body>
+</html>
