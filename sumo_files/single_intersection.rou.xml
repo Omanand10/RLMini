@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<routes>
+    <vType id="car" accel="2.6" decel="4.5" sigma="0.5" length="5.0" maxSpeed="13.89" />
+    <flow id="f_0" type="car" from="N_C" to="C_S" begin="0" end="3600" period="12.0" departLane="best" departSpeed="max" />
+    <flow id="f_1" type="car" from="N_C" to="C_E" begin="0" end="3600" period="36.0" departLane="best" departSpeed="max" />
+    <flow id="f_2" type="car" from="N_C" to="C_W" begin="0" end="3600" period="36.0" departLane="best" departSpeed="max" />
+    <flow id="f_3" type="car" from="S_C" to="C_N" begin="0" end="3600" period="12.0" departLane="best" departSpeed="max" />
+    <flow id="f_4" type="car" from="S_C" to="C_W" begin="0" end="3600" period="36.0" departLane="best" departSpeed="max" />
+    <flow id="f_5" type="car" from="S_C" to="C_E" begin="0" end="3600" period="36.0" departLane="best" departSpeed="max" />
+    <flow id="f_6" type="car" from="E_C" to="C_W" begin="0" end="3600" period="14.4" departLane="best" departSpeed="max" />
+    <flow id="f_7" type="car" from="E_C" to="C_S" begin="0" end="3600" period="45.0" departLane="best" departSpeed="max" />
+    <flow id="f_8" type="car" from="E_C" to="C_N" begin="0" end="3600" period="45.0" departLane="best" departSpeed="max" />
+    <flow id="f_9" type="car" from="W_C" to="C_E" begin="0" end="3600" period="14.4" departLane="best" departSpeed="max" />
+    <flow id="f_10" type="car" from="W_C" to="C_N" begin="0" end="3600" period="45.0" departLane="best" departSpeed="max" />
+    <flow id="f_11" type="car" from="W_C" to="C_S" begin="0" end="3600" period="45.0" departLane="best" departSpeed="max" />
+</routes>
