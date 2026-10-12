@@ -22,7 +22,8 @@ PLOTS = os.path.join(RESULTS, "plots")
 ASSETS = os.path.join(HERE, "assets")
 RED = RGBColor(0xBC, 0x20, 0x2E)
 FONT = "Times New Roman"
-REPO = "https://github.com/Omanand10/RLMini/tree/feat/pragyan-rover"
+REPO = "https://github.com/Omanand10/RLMini"
+SITE = "https://pragyan-rl.vercel.app"
 
 M = json.load(open(os.path.join(RESULTS, "metrics.json")))
 T = M["fixed_map"]
@@ -435,8 +436,8 @@ para("Exploration starts fully random (ε = 1) so that every reachable part of t
      "(return, success, steps and samples relayed per episode) are logged for every episode.")
 
 heading("3.6 Working Demonstration", before=4)
-para("The trained agents are demonstrated in an interactive lunar simulation (demo/index.html, runs offline in "
-     "any browser). It has four views: **Mission Replay** (any agent at episode 1, mid-training or fully trained, "
+para("The trained agents are demonstrated in an interactive 3D lunar simulation on the project website "
+     "(https://pragyan-rl.vercel.app, built with React and three.js; it also runs offline from the repository). It has four views: **Mission Replay** (any agent at episode 1, mid-training or fully trained, "
      "with battery, sun, sample status and a mission log), **Head-to-Head** (two agents side by side on the same "
      "map), **Live: Drop a Crater** (the DQN agent drives in real time inside the browser; clicking a cell drops a "
      "crater or boulder, and the agent's Q-values and NavCam window are shown as it replans) and **Scoreboard**. "
@@ -664,8 +665,10 @@ for r_ in refs:
 # ================================== APPENDIX ===================================================
 heading("Appendix")
 heading("A. Source code / GitHub repository link", size=12, before=4)
-para(f"{REPO}  (branch feat/pragyan-rover). Run: python -m pragyan.env (self-check), python train.py (all "
-     "experiments), python plots.py (figures), open demo/index.html (simulation).", align=WD_ALIGN_PARAGRAPH.LEFT)
+para(f"Source code: {REPO}", align=WD_ALIGN_PARAGRAPH.LEFT, after=2)
+para(f"Live project website and interactive simulator: {SITE}", align=WD_ALIGN_PARAGRAPH.LEFT, after=2)
+para("Run locally: in rl/, python -m pragyan.env (self-check), python train.py (all experiments), python plots.py "
+     "(figures); in site/, npm install and npm run dev (website).", align=WD_ALIGN_PARAGRAPH.LEFT)
 heading("B. Additional screenshots", size=12, before=4)
 placeholder("[Additional demo screenshots to be inserted here: untrained rover falling into a crater, DQN on an "
             "unseen hazard map, Q-learning vs SARSA head-to-head]")
