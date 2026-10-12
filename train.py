@@ -63,7 +63,7 @@ def tabular_job(job):
 def dqn_job(job):
     total_steps, = job
     import torch
-    torch.set_num_threads(3)
+    torch.set_num_threads(8)
     from pragyan import dqn as D
     q, log, recs = D.train_dqn(total_steps=total_steps, record_at=(0,), log_every=max(1, total_steps // 20))
     pol = D.dqn_policy(q)
@@ -130,7 +130,7 @@ def jobs(quick):
         ("Monte Carlo", "mc_control", N, {}),
         ("Dyna-Q (k=10)", "dyna_q", ND, {"planning": 10}),
     ]
-    out = [("dqn", (20_000 if quick else 1_000_000,)), ("vi", ())]
+    out = [("dqn", (20_000 if quick else 2_000_000,)), ("vi", ())]
     out += [("tabular", (n, a, e, kw, True)) for n, a, e, kw in main]
     out += [("baseline", ("Random",)), ("baseline", ("Heuristic",))]
     sweeps = []
@@ -159,10 +159,15 @@ def main():
     todo = jobs(args.quick)
     t0 = time.time()
     results = []
+    # phase 1: tabular agents, sweeps and baselines in parallel
     with ProcessPoolExecutor(args.workers) as ex:
-        for res in ex.map(run_job, todo):
+        for res in ex.map(run_job, [j for j in todo if j[0] != "dqn"]):
             print(f"[{time.time()-t0:6.0f}s] done: {res['name']}", flush=True)
             results.append(res)
+    # phase 2: DQN alone, so the network gets every core instead of fighting the pool
+    for job in [j for j in todo if j[0] == "dqn"]:
+        results.append(run_job(job))
+        print(f"[{time.time()-t0:6.0f}s] done: DQN", flush=True)
 
     run = {"quick": args.quick, "map": E.LunarMap.from_strings(E.LANDING_ZONE).to_dict(),
            "results": results, "total_time": time.time() - t0}

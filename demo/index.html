@@ -759,7 +759,7 @@ function showQ(q, mask, best) {
   const bestL = learners.reduce((b, r) => (r[1].return_mean > b[1].return_mean ? r : b), learners[0])[0];
   const pct = v => (100 * v).toFixed(1) + "%";
   document.getElementById("score").innerHTML = `<tr><th>Agent</th><th>Avg return</th><th>Success</th><th>Samples relayed</th><th>Crater</th><th>Battery dead</th><th>Night</th><th>Avg steps</th><th>Training</th></tr>` +
-    rows.map(([n, r]) => `<tr class="${n === bestL ? "best" : ""}"><td>${n}${n === "Value Iteration" ? " (optimal, model-based)" : ""}${n === bestL ? " ★ best learner" : ""}</td><td>${r.return_mean.toFixed(1)} ± ${r.return_std_seeds.toFixed(1)}</td><td>${pct(r.success_rate)}</td><td>${r.sent_mean.toFixed(2)} / 4</td><td>${pct(r.crater_rate)}</td><td>${pct(r.battery_rate)}</td><td>${pct(r.night_rate)}</td><td>${r.steps_mean.toFixed(0)}</td><td>${r.episodes ? r.episodes.toLocaleString() + " ep" : n === "DQN" ? "1M steps" : "-"}${r.train_time_s ? " / " + r.train_time_s.toFixed(0) + " s" : ""}</td></tr>`).join("");
+    rows.map(([n, r]) => `<tr class="${n === bestL ? "best" : ""}"><td>${n}${n === "Value Iteration" ? " (optimal, model-based)" : ""}${n === bestL ? " ★ best learner" : ""}</td><td>${r.return_mean.toFixed(1)} ± ${r.return_std_seeds.toFixed(1)}</td><td>${pct(r.success_rate)}</td><td>${r.sent_mean.toFixed(2)} / 4</td><td>${pct(r.crater_rate)}</td><td>${pct(r.battery_rate)}</td><td>${pct(r.night_rate)}</td><td>${r.steps_mean.toFixed(0)}</td><td>${r.episodes ? r.episodes.toLocaleString() + " ep" : n === "DQN" ? "2M steps" : "-"}${r.train_time_s ? " / " + r.train_time_s.toFixed(0) + " s" : ""}</td></tr>`).join("");
 })();
 
 // tabs

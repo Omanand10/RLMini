@@ -70,7 +70,7 @@ PROGRESS_K = 12.0
 
 HPARAMS = dict(nstep=3, double=True, shaping=1.0, randomize="perturb", total_steps=600_000, lr=5e-4, gamma=0.99, batch=128, buffer=100_000,
                warmup=5_000, train_every=2, target_every=1_000,
-               eps_start=1.0, eps_end=0.05, eps_frac=0.6, hidden=128)
+               eps_start=1.0, eps_end=0.05, eps_frac=0.4, hidden=128)
 
 
 def train_dqn(seed=0, record_at=(), log_every=20_000, **overrides):

@@ -253,8 +253,39 @@ def fig_sent(R):
     save(fig, "samples_sent_vs_episode.png")
 
 
+def fig_architecture():
+    """Report 3.1: Environment -> State -> RL Agent -> Action -> Reward -> State Update -> Learning."""
+    from matplotlib.patches import FancyBboxPatch
+    fig, ax = plt.subplots(figsize=(11, 5.2))
+    ax.set_xlim(0, 11); ax.set_ylim(0, 5.2); ax.axis("off")
+    boxes = [
+        (0.3, 2.0, 3.0, 1.9, "#e8e3d6", "Environment\nPragyanEnv (Gymnasium)\nlunar grid, slip, battery,\nsun phases, Vikram relay"),
+        (4.0, 3.6, 2.6, 1.1, "#dbe9ff", "State s\n(x, y, battery, site status,\nsun phase) / NavCam features"),
+        (7.6, 2.0, 3.1, 1.9, "#ffe2c2", "RL Agent\nQ-table (Q-learning, SARSA,\nDyna-Q, n-step SARSA, MC)\nor Q-network (DQN)"),
+        (4.0, 0.25, 2.6, 1.1, "#e3f7e3", "Action a (13)\n8 moves, LIBS, APXS,\nTRANSMIT, RECHARGE, SLEEP"),
+        (7.6, 0.1, 3.1, 1.3, "#f3e0f7", "Learning update\nQ(s,a) += α[r + γ max Q(s',·) - Q(s,a)]\nreplay + target net (DQN)"),
+    ]
+    for x, y, w, h, col, txt in boxes:
+        ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.05,rounding_size=0.15", fc=col, ec="#333", lw=1.2))
+        ax.text(x + w / 2, y + h / 2, txt, ha="center", va="center", fontsize=9)
+
+    def arr(p, q, label, off=(0, .18)):
+        ax.annotate("", q, p, arrowprops=dict(arrowstyle="-|>", lw=1.6, color="#333", mutation_scale=16))
+        ax.text((p[0] + q[0]) / 2 + off[0], (p[1] + q[1]) / 2 + off[1], label, ha="center", fontsize=8.5, color="#a33", style="italic")
+    arr((3.3, 3.6), (4.0, 4.1), "observe")
+    arr((6.6, 4.1), (7.6, 3.6), "sₜ")
+    arr((7.6, 2.3), (6.6, 0.9), "ε-greedy\n(action mask)", off=(.15, .25))
+    arr((4.0, 0.8), (3.3, 2.0), "execute", off=(-.35, 0))
+    arr((3.3, 2.5), (7.6, 1.3), "reward rₜ, next state sₜ₊₁", off=(-.2, .12))
+    arr((9.15, 1.4), (9.15, 2.0), "")
+    ax.text(9.35, 1.62, "update policy / value", fontsize=8.5, color="#a33", style="italic")
+    ax.set_title("System architecture: agent-environment loop", fontsize=12)
+    save(fig, "architecture.png")
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
+    fig_architecture()
     run = pickle.load(open(os.path.join(ROOT, "results", "run.pkl"), "rb"))
     R = {r["name"]: r for r in run["results"]}
     fig_environment(run)
