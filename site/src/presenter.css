@@ -1,0 +1,48 @@
+/* ---- slide navigator (right edge) ---- */
+.presenter { position: fixed; right: 1.1rem; top: 50%; transform: translateY(-50%); z-index: 50; display: grid; justify-items: end; gap: 0.8rem; color: var(--ink); mix-blend-mode: normal; }
+.presenter.dark { color: var(--on-dark); }
+.presenter ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+.presenter button { display: flex; align-items: center; justify-content: flex-end; gap: 0.6rem; background: none; border: 0; padding: 0.15rem 0; color: inherit; }
+.presenter button::after { content: ""; width: 0.45rem; height: 0.45rem; border-radius: 50%; background: currentColor; opacity: 0.3; transition: opacity 0.25s, transform 0.25s; }
+.presenter button.on::after { opacity: 1; transform: scale(1.5); background: var(--gold); }
+.presenter button span { font-size: 0.75rem; opacity: 0; transform: translateX(0.4rem); transition: opacity 0.2s, transform 0.2s; white-space: nowrap; }
+.presenter:hover button span, .presenter button:focus-visible span { opacity: 0.85; transform: none; }
+.presenter .counter { margin: 0; font-size: 0.8rem; opacity: 0.6; }
+@media (max-width: 800px) { .presenter { display: none; } }
+
+/* ---- slide entrances (play when a slide becomes .in-view) ---- */
+@media (prefers-reduced-motion: no-preference) {
+  [data-slide] .panel-head > *, [data-slide] .context > *, [data-slide] .mdp-list > li, [data-slide] .map-figure,
+  [data-slide] .steps > li, [data-slide] .ledger tr, [data-slide] .rl-lower .loop, [data-slide] .algo-table tbody tr,
+  [data-slide] .observations > li, [data-slide] .result, [data-slide] .mc-head, [data-slide] .mc-controls,
+  [data-slide] .mc-main, [data-slide] .concl-col, [data-slide] .end-grid > * {
+    opacity: 0; transform: translateY(1.6rem);
+    transition: opacity 0.7s cubic-bezier(.2, .7, .2, 1), transform 0.8s cubic-bezier(.2, .7, .2, 1);
+    transition-delay: calc(var(--i, 0) * 70ms);
+  }
+  [data-slide].in-view .panel-head > *, [data-slide].in-view .context > *, [data-slide].in-view .mdp-list > li,
+  [data-slide].in-view .map-figure, [data-slide].in-view .steps > li, [data-slide].in-view .ledger tr,
+  [data-slide].in-view .rl-lower .loop, [data-slide].in-view .algo-table tbody tr, [data-slide].in-view .observations > li,
+  [data-slide].in-view .result, [data-slide].in-view .mc-head, [data-slide].in-view .mc-controls,
+  [data-slide].in-view .mc-main, [data-slide].in-view .concl-col, [data-slide].in-view .end-grid > * {
+    opacity: 1; transform: none;
+  }
+
+  /* map cells ripple in from the start corner */
+  [data-slide] .mapchart .cell { opacity: 0; transition: opacity 0.5s ease; transition-delay: calc(var(--d, 0) * 28ms + 200ms); }
+  [data-slide].in-view .mapchart .cell { opacity: 1; }
+
+  /* learning curves draw themselves */
+  [data-slide] .chart .curve { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 2.2s cubic-bezier(.4, 0, .2, 1) 0.4s; }
+  [data-slide].in-view .chart .curve { stroke-dashoffset: 0; }
+  [data-slide] .chart .curve.hot { transition-duration: 2.6s; }
+
+  /* bars grow */
+  [data-slide] .chart .grow-x { transform: scaleX(0); transform-box: fill-box; transform-origin: left; transition: transform 0.9s cubic-bezier(.2, .7, .2, 1); transition-delay: calc(var(--r, 0) * 90ms + 300ms); }
+  [data-slide] .chart .grow-y { transform: scaleY(0); transform-box: fill-box; transform-origin: bottom; transition: transform 0.9s cubic-bezier(.2, .7, .2, 1); transition-delay: calc(var(--r, 0) * 90ms + 300ms); }
+  [data-slide].in-view .chart .grow-x, [data-slide].in-view .chart .grow-y { transform: none; }
+
+  /* hero: one orchestrated entrance on load */
+  .hero-copy > *, .hero-facts { animation: hero-in 1s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i, 0) * 120ms + 250ms); }
+  @keyframes hero-in { from { opacity: 0; transform: translateY(2rem); } to { opacity: 1; transform: none; } }
+}

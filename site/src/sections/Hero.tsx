@@ -26,7 +26,7 @@ export default function Hero() {
   }, []);
   useEffect(() => { player.play(); }, [player]);
   return (
-    <header className="hero">
+    <header className="hero on-dark-slide" data-slide="Title">
       <View3D className="hero-canvas" fov={32}>
         <Loop player={player} />
         <LunarScene player={player} opts={{ camera: "hero" }} />

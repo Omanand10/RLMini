@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { scaleLinear, scaleLog } from "d3-scale";
 import { line } from "d3-shape";
 import { DATA } from "../sim/env";
@@ -42,7 +43,7 @@ export function LearningCurves() {
         const c = DATA.curves[n].returns;
         const d = line<number>().x((_, i) => x(c.x[i])).y((v) => y(v))(c.y);
         const hot = n === "Q-learning";
-        return <path key={n} d={d ?? ""} fill="none" stroke={hot ? GOLD : INK} strokeOpacity={hot ? 1 : 0.42} strokeWidth={hot ? 3 : 1.6} />;
+        return <path key={n} className={`curve ${hot ? "hot" : ""}`} pathLength={1} d={d ?? ""} fill="none" stroke={hot ? GOLD : INK} strokeOpacity={hot ? 1 : 0.42} strokeWidth={hot ? 3 : 1.6} />;
       })}
       {labels.map((l) => (
         <text key={l.n} x={l.x + 8} y={l.y + 4} className={`end-label ${l.n === "Q-learning" ? "hot" : ""}`}>{AGENT_INFO[l.n].short}</text>
@@ -78,7 +79,7 @@ export function FailureModes() {
             <rect x={m.l} y={8} width={W - m.l - m.r} height={rowH - 16} fill={INK} fillOpacity={0.06} />
             {parts.map(([k, , c]) => {
               const v = r[k] as number, x0 = x(acc); acc += v;
-              return <rect key={k} x={x0} y={8} width={Math.max(0, x(acc) - x0)} height={rowH - 16} fill={c} />;
+              return <rect key={k} className="grow-x" style={{ "--r": i } as CSSProperties} x={x0} y={8} width={Math.max(0, x(acc) - x0)} height={rowH - 16} fill={c} />;
             })}
           </g>
         );
@@ -115,7 +116,7 @@ export function Generalization() {
             const bx = gw / 2 - (agents.length * bw) / 2 + ai * bw;
             return (
               <g key={a}>
-                <rect x={bx + 4} y={y(v)} width={bw - 8} height={y(0) - y(v)} fill={c} />
+                <rect className="grow-y" style={{ "--r": gi * 3 + ai } as CSSProperties} x={bx + 4} y={y(v)} width={bw - 8} height={y(0) - y(v)} fill={c} />
                 <text x={bx + bw / 2} y={y(v) - 6} textAnchor="middle" className="tick">{v > 0 && v < 0.01 ? "<1" : Math.round(v * 100)}%</text>
               </g>
             );

@@ -1,11 +1,12 @@
 import { useEffect, type ComponentType } from "react";
 import Hero from "./sections/Hero";
 import MissionControl from "./sections/MissionControl";
-import { Algorithms, Learning, Mission, Night, RLProblem, Results } from "./sections/Story";
+import { Algorithms, Conclusion, Learning, Mission, Night, RLProblem, Results } from "./sections/Story";
+import Presenter from "./Presenter";
 
 const SECTIONS: Record<string, ComponentType> = {
   hero: Hero, mission: Mission, problem: RLProblem, learning: Learning, "mission-control": MissionControl,
-  algorithms: Algorithms, results: Results, night: Night,
+  algorithms: Algorithms, results: Results, conclusion: Conclusion, night: Night,
 };
 
 export default function App() {
@@ -16,7 +17,7 @@ export default function App() {
 
   // ?only=<section> renders one section alone (used for screenshots while developing)
   const only = new URLSearchParams(location.search).get("only");
-  if (only && SECTIONS[only]) { const S = SECTIONS[only]; return <S />; }
+  if (only && SECTIONS[only]) { const S = SECTIONS[only]; return <><S /><Presenter /></>; }
   return (
     <>
       <Hero />
@@ -27,8 +28,10 @@ export default function App() {
         <MissionControl />
         <Algorithms />
         <Results />
+        <Conclusion />
       </main>
       <Night />
+      <Presenter />
     </>
   );
 }

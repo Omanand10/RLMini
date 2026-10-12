@@ -206,3 +206,13 @@
 .algo-table .tags i { font-size: 0.68rem; padding: 0.05rem 0.45rem; }
 #algorithms .panel-head .t-lede { font-size: 1.05rem; max-width: 60ch; }
 .algos-note { max-width: none; }
+
+/* conclusion + closing */
+.concl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.5rem; }
+.concl-col { border-top: 2px solid var(--ink); padding-top: 1rem; }
+.concl-col .t-h3 { font-size: 1.3rem; margin-bottom: 0.6rem; }
+.concl-col ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.6rem; font-size: 1.05rem; line-height: 1.45; color: var(--ink-soft); }
+.night.panel { justify-content: center; }
+.end-grid { display: grid; gap: 0; }
+.night .night-line { color: var(--on-dark); }
+@media (max-width: 1000px) { .concl-grid { grid-template-columns: 1fr; } }

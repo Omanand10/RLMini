@@ -367,7 +367,7 @@ export default function MissionControl() {
   const [mode, setMode] = useState<Mode>("replay");
   const [speed, setSpeed] = useState(4);
   return (
-    <section className="section panel mission-control" id="mission-control">
+    <section className="section panel mission-control on-dark-slide" id="mission-control" data-slide="Live simulation">
       <div className="wrap">
         <div className="mc-head">
           <h2 className="t-h2">Watch the agents drive</h2>

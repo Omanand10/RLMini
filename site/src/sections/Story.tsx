@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { BOULDER, COMM_RADIUS, CRATER, DATA, SHADOW, SLOPE, VIKRAM } from "../sim/env";
 import { AGENT_INFO } from "../sim/episodes";
 import { FailureModes, Generalization, LearningCurves } from "./charts";
@@ -9,7 +10,7 @@ const REPO = "https://github.com/Omanand10/RLMini";
 // ---- where the idea comes from (kept short: the simulation is the point) --------------------------
 export function Mission() {
   return (
-    <section className="section panel light" id="mission">
+    <section className="section panel light" id="mission" data-slide="Motivation">
       <div className="wrap context">
         <h2 className="t-h3">Where the idea comes from</h2>
         <p>
@@ -53,7 +54,7 @@ function MapChart() {
   return (
     <svg viewBox={`-2 -2 ${N * S + 4} ${N * S + 4}`} className="mapchart" role="img" aria-label="Top-down map of the environment">
       {m.terrain.map((row, r) => row.map((t, c) => (
-        <rect key={`${r}-${c}`} x={c * S} y={r * S} width={S} height={S} fill={fill(t)} stroke="#161615" strokeOpacity={0.08} />
+        <rect key={`${r}-${c}`} className="cell" style={{ "--d": r + c } as CSSProperties} x={c * S} y={r * S} width={S} height={S} fill={fill(t)} stroke="#161615" strokeOpacity={0.08} />
       )))}
       {m.terrain.map((row, r) => row.map((t, c) => t === CRATER ? <circle key={`c${r}-${c}`} cx={c * S + S / 2} cy={r * S + S / 2} r={S * 0.4} fill="#161615" />
         : t === BOULDER ? <polygon key={`b${r}-${c}`} points={`${c * S + 9},${r * S + 30} ${c * S + 14},${r * S + 12} ${c * S + 27},${r * S + 9} ${c * S + 33},${r * S + 27}`} fill="#5e5b55" />
@@ -81,7 +82,7 @@ const REWARDS = (K: Record<string, number>): [string, number][] => [
 
 export function RLProblem() {
   return (
-    <section className="section panel morning" id="problem">
+    <section className="section panel morning" id="problem" data-slide="The RL problem">
       <div className="wrap">
         <div className="panel-head">
           <h2 className="t-h2">The reinforcement-learning problem</h2>
@@ -140,7 +141,7 @@ export function RLProblem() {
 export function Learning() {
   const rewards = REWARDS(DATA.consts);
   return (
-    <section className="section panel morning" id="learning">
+    <section className="section panel morning" id="learning" data-slide="Rewards and learning">
       <div className="wrap">
         <div className="panel-head">
           <h2 className="t-h2">Rewards and learning</h2>
@@ -180,7 +181,7 @@ export function Algorithms() {
   const order = ["Value Iteration", "Q-learning", "Dyna-Q (k=10)", "SARSA", "DQN", "n-step SARSA (n=4)", "Monte Carlo", "Heuristic", "Random"];
   const T = DATA.table;
   return (
-    <section className="section panel noon" id="algorithms">
+    <section className="section panel noon" id="algorithms" data-slide="Algorithms">
       <div className="wrap">
         <div className="panel-head">
           <h2 className="t-h2">Seven algorithms, one environment</h2>
@@ -223,7 +224,7 @@ export function Results() {
   const sw = DATA.sweeps;
   return (
     <>
-      <section className="section panel morning" id="results">
+      <section className="section panel morning" id="results" data-slide="Results: training">
         <div className="wrap">
           <div className="panel-head">
             <h2 className="t-h2">Results: training</h2>
@@ -243,7 +244,7 @@ export function Results() {
           </div>
         </div>
       </section>
-      <section className="section panel morning" id="results-policies">
+      <section className="section panel morning" id="results-policies" data-slide="Results: final policies">
         <div className="wrap">
           <div className="panel-head">
             <h2 className="t-h2">Results: final policies</h2>
@@ -266,20 +267,63 @@ export function Results() {
   );
 }
 
-// ---- footer ----------------------------------------------------------------------------------------
+// ---- conclusion -------------------------------------------------------------------------------------
+export function Conclusion() {
+  const T = DATA.table, q = T["Q-learning"];
+  return (
+    <section className="section panel noon" id="conclusion" data-slide="Conclusion">
+      <div className="wrap">
+        <div className="panel-head">
+          <h2 className="t-h2">Conclusion</h2>
+          <p className="t-lede muted">What we built, what we found, and what is left.</p>
+        </div>
+        <div className="concl-grid">
+          <div className="concl-col">
+            <h3 className="t-h3">What we built</h3>
+            <ul>
+              <li>A stochastic MDP of a lunar rover's day: 13 actions, {DATA.valueIteration.n_reachable_states.toLocaleString()} states, slips and random battery drain.</li>
+              <li>Seven methods on the same environment: Value Iteration, Monte Carlo, Q-learning, SARSA, n-step SARSA, Dyna-Q and a Deep Q-Network.</li>
+              <li>A 3D simulator in the browser that reproduces the Python environment step for step.</li>
+            </ul>
+          </div>
+          <div className="concl-col">
+            <h3 className="t-h3">What we found</h3>
+            <ul>
+              <li>Q-learning reached {Math.round((100 * q.return_mean) / T["Value Iteration"].return_mean)}% of the optimal return and cut crater losses from {pct(T.Random.crater_rate)} to {pct(q.crater_rate)}.</li>
+              <li>SARSA learned the safest policy; Dyna-Q learned fastest per episode.</li>
+              <li>Only the DQN carried its skill to maps it had never seen.</li>
+            </ul>
+          </div>
+          <div className="concl-col">
+            <h3 className="t-h3">Limits and next steps</h3>
+            <ul>
+              <li>Tabular agents had not fully converged; longer training and tuned ε decay should close the gap.</li>
+              <li>The map is a grid, not real terrain; a lunar elevation model would be the next step.</li>
+              <li>Hidden terrain makes this a POMDP; a recurrent DQN could reason about what it has not seen.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---- closing slide ---------------------------------------------------------------------------------
 export function Night() {
   return (
-    <footer className="section night" id="credits">
+    <footer className="section panel night on-dark-slide" id="credits" data-slide="Questions">
       <div className="wrap">
-        <p className="night-line">Good night, Pragyan.</p>
-        <p className="team">Om Dwivedi, 16010123213 &nbsp;&nbsp; Om Anand Jha, 16010123214</p>
-        <div className="night-grid">
-          <p className="muted">Reinforcement Learning mini project, 2026. The simulation is inspired by ISRO's Chandrayaan-3 mission and is not an ISRO product.</p>
-          <ul>
-            <li><a href={REPO}>Source code on GitHub</a></li>
-            <li><a href={`${REPO}/raw/main/report/Pragyan_RL_Report.docx`}>Download the project report</a></li>
-            <li><a href="#mission-control">Back to mission control</a></li>
-          </ul>
+        <div className="end-grid">
+          <p className="night-line">Questions?</p>
+          <p className="team">Om Dwivedi, 16010123213 &nbsp;&nbsp; Om Anand Jha, 16010123214</p>
+          <div className="night-grid">
+            <p className="muted">Reinforcement Learning mini project, 2026. The simulation is inspired by ISRO's Chandrayaan-3 mission and is not an ISRO product.</p>
+            <ul>
+              <li><a href={REPO}>Source code on GitHub</a></li>
+              <li><a href={`${REPO}/raw/main/report/Pragyan_RL_Report.docx`}>Download the project report</a></li>
+              <li><a href="#mission-control">Back to the live simulation</a></li>
+            </ul>
+          </div>
         </div>
       </div>
     </footer>
