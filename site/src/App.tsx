@@ -2,11 +2,11 @@ import { useEffect, type ComponentType } from "react";
 import Lenis from "lenis";
 import Hero from "./sections/Hero";
 import MissionControl from "./sections/MissionControl";
-import { Algorithms, Mission, Night, Problem, Results } from "./sections/Story";
+import { Algorithms, HowItWorks, Mission, Night, Problem, Results } from "./sections/Story";
 
 // The page is one lunar day: sunrise (hero, mission) to night (footer).
 const SECTIONS: Record<string, ComponentType> = {
-  hero: Hero, mission: Mission, problem: Problem, algorithms: Algorithms, results: Results,
+  hero: Hero, mission: Mission, how: HowItWorks, problem: Problem, algorithms: Algorithms, results: Results,
   "mission-control": MissionControl, night: Night,
 };
 
@@ -32,6 +32,7 @@ export default function App() {
       <Hero />
       <main>
         <Mission />
+        <HowItWorks />
         <Problem />
         <Algorithms />
         <Results />

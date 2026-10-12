@@ -10,31 +10,114 @@ function Clock({ children }: { children: string }) {
   return <p className="clock"><i />{children}</p>;
 }
 
-// ---- the real mission ----------------------------------------------------------------------
+// ---- the real mission, explained plainly -------------------------------------------------------
 export function Mission() {
-  const events = [
-    ["23 Aug 2023", "Vikram lands at Shiv Shakti point, 600 km from the south pole, and Pragyan rolls down the ramp."],
-    ["27 Aug 2023", "A 4 m crater appears 3 m ahead. Engineers on Earth command the rover to back up and find a new path."],
-    ["29 Aug 2023", "ISRO reports that the LIBS laser has confirmed sulphur in the soil, measured on site near the south pole."],
-    ["2 Sep 2023", "About 100 m driven. Pragyan parks in sunlight, switches off its instruments and goes to sleep before the lunar night."],
+  const mapping: [string, string, string][] = [
+    ["Pragyan carried two instruments: a laser (LIBS) and an X-ray spectrometer (APXS).",
+      "Four science sites on the map. Sulphur sites need the laser, element sites need the X-ray scan.", "Actions and goal states"],
+    ["Pragyan could not talk to Earth. Only Vikram could, so the rover had to stay close enough to relay.",
+      "Results count only when the rover transmits from inside Vikram's radio range.", "Reward for relaying"],
+    ["It ran on solar power for one lunar day, about 14 Earth days, then the freezing night.",
+      "A battery that drains as it drives, a sun that moves from morning to dusk, and an episode that ends at night.", "State and episode end"],
+    ["On 27 August a 4 m crater appeared 3 m ahead and the team on Earth had to reroute it.",
+      "Craters end the episode, and wheels can slip sideways into them.", "Terminal hazard states"],
+    ["Before night it was parked in sunlight with its instruments off and put to sleep.",
+      "A sleep action that pays off only at dusk, in sunlight, with enough charge.", "Final goal"],
   ];
   return (
     <section className="section light" id="mission">
       <div className="wrap">
         <div className="opener">
           <Clock>Sunrise: the real mission</Clock>
-          <h2 className="t-h2">Fourteen days, one radio link, no second chances</h2>
-          <p className="t-lede muted">Every command Pragyan ran was planned on Earth. This project asks a different question: could the rover plan its own day?</p>
+          <h2 className="t-h2">What Chandrayaan-3 did</h2>
+          <p className="t-lede muted">The short version, and why it makes a good reinforcement-learning problem.</p>
         </div>
-        <ol className="timeline">
-          {events.map(([d, t]) => (
-            <li key={d}><time>{d}</time><p>{t}</p></li>
-          ))}
-        </ol>
-        <div className="constraints">
-          <p><b>One lunar day.</b> Solar power only. When the sun sets, the mission ends whether the work is done or not.</p>
-          <p><b>Vikram is the only phone.</b> Results reach Earth only when the rover is close enough to the lander to relay them.</p>
-          <p><b>The ground fights back.</b> Wheels slip on loose dust, craters appear without warning, and the batteries drain on every climb.</p>
+        <div className="mission-story">
+          <div className="story-text">
+            <p>On 23 August 2023, India's Chandrayaan-3 landed near the Moon's south pole, closer to it than any mission before. It had two parts. <b>Vikram</b> was the lander. It stayed where it touched down. <b>Pragyan</b> was a 26 kg six-wheeled rover that rolled down a ramp from Vikram.</p>
+            <p>Pragyan's job was to drive to interesting patches of ground, measure what they are made of, and get those results back to Earth. Its laser instrument found sulphur in the soil. Over about ten days it drove roughly 100 metres.</p>
+            <p>Every move was planned by engineers on Earth and sent up as commands. The rover had limited power, one radio link and only one lunar day, and the ground was full of craters. So each command was a trade-off: drive further for more science, or save battery and stay safe.</p>
+          </div>
+          <ol className="timeline vertical">
+            <li><time>23 Aug</time><p>Vikram lands. Pragyan rolls out.</p></li>
+            <li><time>27 Aug</time><p>Crater ahead. Pragyan is commanded to back up and take a new route.</p></li>
+            <li><time>29 Aug</time><p>ISRO reports sulphur, measured on site by the laser.</p></li>
+            <li><time>2 Sep</time><p>Parked in sunlight and put to sleep before the lunar night.</p></li>
+          </ol>
+        </div>
+        <h3 className="t-h3 mapping-title">From the real mission to our simulation</h3>
+        <table className="mapping">
+          <thead><tr><th>On the Moon</th><th>In our simulation</th><th>RL term</th></tr></thead>
+          <tbody>
+            {mapping.map(([real, sim, term]) => (
+              <tr key={term}><td>{real}</td><td>{sim}</td><td>{term}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+// ---- what we built, in plain words + RL vocabulary ------------------------------------------------
+function Loop() {
+  return (
+    <svg viewBox="0 0 640 300" className="loop" role="img" aria-label="The reinforcement learning loop">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#161615" />
+        </marker>
+      </defs>
+      <rect x="20" y="100" width="190" height="100" rx="8" fill="#161615" />
+      <text x="115" y="143" textAnchor="middle" className="loop-big on-ink">Agent</text>
+      <text x="115" y="168" textAnchor="middle" className="loop-small on-ink-soft">the rover's decision-maker</text>
+      <rect x="430" y="100" width="190" height="100" rx="8" fill="none" stroke="#161615" strokeWidth="2" />
+      <text x="525" y="143" textAnchor="middle" className="loop-big">Environment</text>
+      <text x="525" y="168" textAnchor="middle" className="loop-small">the simulated Moon</text>
+      <path d="M210 125 C 300 50, 340 50, 430 125" fill="none" stroke="#161615" strokeWidth="2" markerEnd="url(#ah)" />
+      <text x="320" y="52" textAnchor="middle" className="loop-label">action aₜ: one command</text>
+      <path d="M430 175 C 340 250, 300 250, 210 175" fill="none" stroke="#c9a13b" strokeWidth="3" markerEnd="url(#ah)" />
+      <text x="320" y="262" textAnchor="middle" className="loop-label">reward rₜ and next state sₜ₊₁</text>
+    </svg>
+  );
+}
+
+export function HowItWorks() {
+  const terms: [string, string][] = [
+    ["Agent", "The program that drives the rover. It starts knowing nothing about the Moon."],
+    ["Environment", "Our simulated landing zone: a 12 × 12 m grid with craters, slopes, shadow, the sun and Vikram."],
+    ["State s", "What the rover knows right now: where it is, battery level, which sites are done, and the time of day."],
+    ["Action a", "One of 13 commands: drive in 8 directions, fire the laser, run the X-ray scan, transmit, recharge, or sleep."],
+    ["Reward r", "Points after every action. Science and relaying earn points; wasted steps cost a little; craters cost a lot."],
+    ["Episode", "One full lunar day, from rolling off Vikram until the rover sleeps, crashes, runs flat or night falls."],
+    ["Start state", "Next to Vikram, battery full, morning, nothing sampled yet."],
+    ["Goal states", "All four results sent to Earth and the rover asleep in sunlight at dusk. This earns the biggest reward."],
+    ["Terminal states", "Moments that end the episode: falling into a crater, an empty battery, nightfall, or going to sleep."],
+    ["Policy π", "The rover's rulebook: for each state, which action to take. Training produces it."],
+    ["Q-value Q(s, a)", "The agent's estimate of the total reward it will collect if it takes action a in state s and plays well afterwards."],
+    ["Exploration", "Trying random actions early on (ε-greedy), so the agent discovers what works instead of repeating its first guess."],
+  ];
+  return (
+    <section className="section morning" id="how">
+      <div className="wrap">
+        <div className="opener">
+          <Clock>Early morning: what we built</Clock>
+          <h2 className="t-h2">A rover that learns its own plan</h2>
+          <p className="t-lede muted">We built a simulator of Pragyan's landing site. A program then practised the mission hundreds of thousands of times, learning only from points and penalties. Nobody told it the route.</p>
+        </div>
+        <div className="how-grid">
+          <div>
+            <Loop />
+            <ol className="steps">
+              <li><b>Try.</b> In each state the agent picks an action. Early on it is mostly random.</li>
+              <li><b>Get scored.</b> The simulator moves the rover, may make the wheels slip, and returns a reward.</li>
+              <li><b>Update.</b> The agent adjusts its estimate Q(s, a): new estimate = old estimate + α × (reward + γ × best value of the next state − old estimate).</li>
+              <li><b>Repeat.</b> After about 300,000 practice days the estimates settle. The final policy simply picks the action with the highest Q-value.</li>
+            </ol>
+          </div>
+          <dl className="glossary">
+            {terms.map(([t, d]) => <div key={t}><dt>{t}</dt><dd>{d}</dd></div>)}
+          </dl>
         </div>
       </div>
     </section>

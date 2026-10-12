@@ -84,3 +84,33 @@
 .night-grid p { margin: 0; max-width: 60ch; }
 .night-grid ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 @media (max-width: 800px) { .night-grid { grid-template-columns: 1fr; } }
+
+/* mission story */
+.mission-story { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: clamp(32px, 6vw, 96px); align-items: start; }
+.story-text p { margin: 0 0 18px; font-size: 20px; line-height: 1.6; max-width: 60ch; }
+.story-text b { font-weight: 640; }
+.timeline.vertical { grid-template-columns: 1fr; border-top: 0; border-left: 2px solid var(--ink); gap: 22px; padding-left: 0; }
+.timeline.vertical li { padding: 0 0 0 22px; }
+.timeline.vertical li::before { top: 4px; left: -7px; }
+.mapping-title { margin: clamp(64px, 10vh, 120px) 0 18px; }
+.mapping { width: 100%; border-collapse: collapse; font-size: 16px; }
+.mapping th { text-align: left; font-weight: 600; font-size: 14px; color: var(--ink-soft); padding: 0 16px 10px 0; border-bottom: 2px solid var(--ink); }
+.mapping td { padding: 14px 16px 14px 0; border-bottom: 1px solid var(--rule-light); vertical-align: top; line-height: 1.45; }
+.mapping td:last-child { font-weight: 600; white-space: nowrap; }
+@media (max-width: 900px) { .mission-story { grid-template-columns: 1fr; } .mapping td:last-child { white-space: normal; } }
+
+/* how it works */
+.how-grid { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: clamp(32px, 6vw, 96px); align-items: start; }
+.loop { width: 100%; height: auto; display: block; margin-bottom: 28px; }
+.loop-big { font: 600 22px var(--font); font-stretch: 112%; fill: var(--ink); }
+.loop-small { font: 400 14px var(--font); fill: var(--ink-soft); }
+.loop-label { font: 500 16px var(--font); fill: var(--ink); }
+.steps { margin: 0; padding-left: 22px; display: grid; gap: 14px; font-size: 18px; max-width: 58ch; }
+.steps b { font-weight: 640; }
+.glossary { margin: 0; display: grid; gap: 0; border-top: 2px solid var(--ink); }
+.glossary div { display: grid; grid-template-columns: 150px 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule-light); }
+.glossary dt { font-weight: 640; font-stretch: 105%; }
+.glossary dd { margin: 0; color: var(--ink-soft); line-height: 1.45; }
+@media (max-width: 1000px) { .how-grid { grid-template-columns: 1fr; } .glossary div { grid-template-columns: 1fr; gap: 2px; } }
+.loop .on-ink { fill: var(--on-dark); }
+.loop .on-ink-soft { fill: var(--on-dark-soft); }

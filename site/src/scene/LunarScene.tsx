@@ -13,9 +13,12 @@ export interface SceneOptions {
   range?: boolean;
   navcam?: boolean;
   camera?: "hero" | "control";
-  mapKey?: number;           // bump to rebuild terrain after the map changes
+  /** hazards dropped by the user in live mode: drawn as separate meshes, terrain is never rebuilt */
+  added?: AddedHazard[];
   onCell?: (r: number, c: number, shift: boolean) => void;
 }
+
+export interface AddedHazard { r: number; c: number; kind: "crater" | "boulder"; t0: number }
 
 function usePlayer(p: Player) {
   useSyncExternalStore(p.subscribe, p.getVersion);
@@ -25,7 +28,7 @@ function usePlayer(p: Player) {
 export function LunarScene({ player, opts }: { player: Player; opts: SceneOptions }) {
   usePlayer(player);
   const m = player.map;
-  const { geometry, hz } = useMemo(() => buildTerrain(m), [m, opts.mapKey]); // eslint-disable-line
+  const { geometry, hz } = useMemo(() => buildTerrain(m), [m]);
   const h = (x: number, z: number) => heightAt(m, hz, x, z);
 
   const onDown = (e: ThreeEvent<PointerEvent>) => {
@@ -38,7 +41,7 @@ export function LunarScene({ player, opts }: { player: Player; opts: SceneOption
   return (
     <>
       <color attach="background" args={["#000"]} />
-      <fog attach="fog" args={["#000", 22, 46]} />
+      <fog attach="fog" args={["#000", opts.camera === "hero" ? 22 : 30, opts.camera === "hero" ? 46 : 60]} />
       <Sun player={player} />
       <ambientLight intensity={0.07} />
       <hemisphereLight args={["#9fb4d8", "#000", 0.08]} />
@@ -47,7 +50,8 @@ export function LunarScene({ player, opts }: { player: Player; opts: SceneOption
       <mesh geometry={geometry} receiveShadow castShadow onPointerDown={onDown}>
         <meshStandardMaterial vertexColors roughness={1} metalness={0} />
       </mesh>
-      <Boulders m={m} hz={hz} mapKey={opts.mapKey ?? 0} />
+      <Boulders m={m} hz={hz} />
+      {opts.added && <AddedHazards m={m} h={h} added={opts.added} />}
       <Vikram m={m} h={h} />
       <Sites player={player} h={h} labels={!!opts.labels} />
       {opts.range && <RangeOutline m={m} h={h} />}
@@ -104,26 +108,31 @@ function Earth() {
 }
 
 // ---- boulders ---------------------------------------------------------------------------------
-function Boulders({ m, hz, mapKey }: { m: LunarMap; hz: Hazards; mapKey: number }) {
+function rockGeometry(k: number) {
+  const geo = new THREE.IcosahedronGeometry(1, 2);
+  const p = geo.attributes.position as THREE.BufferAttribute;
+  for (let i = 0; i < p.count; i++) {
+    const v = new THREE.Vector3(p.getX(i), p.getY(i), p.getZ(i));
+    v.multiplyScalar(0.72 + 0.5 * fbm(v.x * 1.7 + k * 3, v.y * 1.7 + v.z * 1.3 + k, 3));
+    v.y *= 0.68;
+    p.setXYZ(i, v.x, v.y, v.z);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
+
+function Boulders({ m, hz }: { m: LunarMap; hz: Hazards }) {
   const rocks = useMemo(() => {
     const out: { pos: [number, number, number]; geo: THREE.BufferGeometry; rot: number; s: number }[] = [];
     let k = 0;
     for (let r = 0; r < m.H; r++) for (let c = 0; c < m.W; c++) if (m.terrain[r][c] === BOULDER) {
       const [x, z] = cellToWorld(m, r, c);
-      const geo = new THREE.IcosahedronGeometry(1, 2);
-      const p = geo.attributes.position as THREE.BufferAttribute;
-      for (let i = 0; i < p.count; i++) {
-        const v = new THREE.Vector3(p.getX(i), p.getY(i), p.getZ(i));
-        v.multiplyScalar(0.72 + 0.5 * fbm(v.x * 1.7 + k * 3, v.y * 1.7 + v.z * 1.3 + k, 3));
-        v.y *= 0.68;
-        p.setXYZ(i, v.x, v.y, v.z);
-      }
-      geo.computeVertexNormals();
+      const geo = rockGeometry(k);
       out.push({ pos: [x, heightAt(m, hz, x, z) + 0.12, z], geo, rot: k * 1.7, s: 0.36 + 0.06 * ((k * 7) % 3) });
       k++;
     }
     return out;
-  }, [m, hz, mapKey]); // eslint-disable-line
+  }, [m, hz]);
   return (
     <>
       {rocks.map((b, i) => (
@@ -131,6 +140,48 @@ function Boulders({ m, hz, mapKey }: { m: LunarMap; hz: Hazards; mapKey: number 
           <meshStandardMaterial color="#6f6c66" roughness={0.95} flatShading />
         </mesh>
       ))}
+    </>
+  );
+}
+
+// ---- hazards dropped live: cheap meshes that pop in, no terrain rebuild -------------------------
+const ADDED_ROCK = rockGeometry(7);
+function AddedHazards({ m, h, added }: { m: LunarMap; h: (x: number, z: number) => number; added: AddedHazard[] }) {
+  const refs = useRef<(THREE.Group | null)[]>([]);
+  useFrame(() => {
+    const now = performance.now();
+    added.forEach((a, i) => {
+      const g = refs.current[i];
+      if (!g) return;
+      const k = Math.min(1, (now - a.t0) / 350);
+      g.scale.setScalar(1 - (1 - k) ** 3);
+    });
+  });
+  return (
+    <>
+      {added.map((a, i) => {
+        const [x, z] = cellToWorld(m, a.r, a.c), y = h(x, z);
+        return (
+          <group key={`${a.r}-${a.c}`} ref={(el) => { refs.current[i] = el; }} position={[x, y, z]}>
+            {a.kind === "crater" ? (
+              <>
+                <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]}>
+                  <circleGeometry args={[0.4, 40]} />
+                  <meshStandardMaterial color="#0b0a09" roughness={1} />
+                </mesh>
+                <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]} scale={[1, 1, 0.35]}>
+                  <torusGeometry args={[0.42, 0.06, 10, 40]} />
+                  <meshStandardMaterial color="#a6a29a" roughness={1} />
+                </mesh>
+              </>
+            ) : (
+              <mesh geometry={ADDED_ROCK} position={[0, 0.12, 0]} scale={0.38} castShadow>
+                <meshStandardMaterial color="#6f6c66" roughness={0.95} flatShading />
+              </mesh>
+            )}
+          </group>
+        );
+      })}
     </>
   );
 }
