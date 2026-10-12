@@ -5,7 +5,7 @@
               linear-gradient(0deg, rgba(0,0,0,.7) 0%, rgba(0,0,0,0) 30%); }
 .hero-copy { position: absolute; left: var(--gutter); bottom: clamp(120px, 18vh, 200px); max-width: min(980px, 88vw); display: grid; gap: 28px; }
 .hero-kicker { margin: 0; font-size: 15px; font-stretch: 85%; color: var(--on-dark-soft); }
-.hero .t-display { max-width: 11ch; }
+.hero .t-display { max-width: 13ch; font-size: clamp(44px, 7vw, 112px); }
 .hero .t-lede { color: #cfccc4; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
 .hero-actions .btn-primary { text-decoration: none; padding: 14px 24px; font-size: 16px; }

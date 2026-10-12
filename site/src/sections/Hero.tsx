@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
+import { View3D } from "../scene/View3D";
 import { LunarScene } from "../scene/LunarScene";
 import { Player } from "../sim/player";
 import { DATA } from "../sim/env";
@@ -27,29 +28,27 @@ export default function Hero() {
   const q = DATA.table["Q-learning"];
   return (
     <header className="hero">
-      <div className="hero-canvas" aria-hidden>
-        <Canvas shadows dpr={[1, 1.6]} camera={{ fov: 32, near: 0.1, far: 200 }}>
-          <Loop player={player} />
-          <LunarScene player={player} opts={{ camera: "hero" }} />
-        </Canvas>
-      </div>
+      <View3D className="hero-canvas" fov={32}>
+        <Loop player={player} />
+        <LunarScene player={player} opts={{ camera: "hero" }} />
+      </View3D>
       <div className="hero-shade" />
       <div className="hero-copy">
-        <p className="hero-kicker">Chandrayaan-3 landing zone, lunar south pole, 69.36° S</p>
-        <h1 className="t-display">Pragyan has one lunar day.</h1>
+        <p className="hero-kicker">A reinforcement-learning project inspired by Chandrayaan-3's Pragyan rover</p>
+        <h1 className="t-display">Teaching a lunar rover to plan its own day.</h1>
         <p className="t-lede">
           Fourteen Earth days of sunlight to sample the soil, send results home through Vikram and park safely before
           the cold. We trained reinforcement-learning agents to plan that day themselves.
         </p>
         <div className="hero-actions">
           <a className="btn-primary" href="#mission-control">Watch the agents drive</a>
-          <a className="hero-link" href="#problem">How the problem is set up</a>
+          <a className="hero-link" href="#problem">See how the RL problem is set up</a>
         </div>
       </div>
       <dl className="hero-facts">
-        <div><dt>Samples relayed by the trained agent</dt><dd className="tnum">{q.sent_mean.toFixed(1)} of 4</dd></div>
-        <div><dt>Crater losses, trained vs random</dt><dd className="tnum">{(q.crater_rate * 100).toFixed(0)}% vs {(DATA.table.Random.crater_rate * 100).toFixed(0)}%</dd></div>
         <div><dt>Algorithms compared</dt><dd className="tnum">7</dd></div>
+        <div><dt>Results relayed per episode, Q-learning</dt><dd className="tnum">{q.sent_mean.toFixed(1)} of 4</dd></div>
+        <div><dt>Crater losses, random to trained</dt><dd className="tnum">{(DATA.table.Random.crater_rate * 100).toFixed(0)}% to {(q.crater_rate * 100).toFixed(0)}%</dd></div>
       </dl>
     </header>
   );

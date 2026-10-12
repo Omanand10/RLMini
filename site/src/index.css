@@ -21,7 +21,8 @@
 }
 
 * { box-sizing: border-box; }
-html { background: var(--sky); }
+html { background: var(--sky); scroll-snap-type: y proximity; scroll-behavior: smooth; }
+.hero, .section { scroll-snap-align: start; }
 body {
   margin: 0;
   background: var(--sky);
@@ -30,8 +31,6 @@ body {
   font-stretch: 100%;
   -webkit-font-smoothing: antialiased;
 }
-html.lenis, html.lenis body { height: auto; }
-.lenis.lenis-smooth { scroll-behavior: auto !important; }
 a { color: inherit; text-underline-offset: 3px; }
 button { font: inherit; color: inherit; cursor: pointer; }
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
@@ -61,5 +60,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @media (max-width: 900px) { .opener { grid-template-columns: 1fr; } }
 
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

@@ -44,24 +44,24 @@ export const mapFor = (E: Episode) => (E.map ? makeMap(E.map) : fixedMap());
 export const AGENTS = ["Q-learning", "SARSA", "Dyna-Q (k=10)", "n-step SARSA (n=4)", "Monte Carlo", "DQN",
   "Value Iteration", "Heuristic", "Random"] as const;
 
-export const AGENT_INFO: Record<string, { short: string; module: string; idea: string }> = {
-  "Value Iteration": { short: "Value Iteration", module: "Module 2: Dynamic programming",
-    idea: "Knows every probability of the Moon in advance and computes the perfect plan. Our upper bound, not a learner." },
-  "Monte Carlo": { short: "Monte Carlo", module: "Module 2: Monte Carlo control",
-    idea: "Waits until the mission ends, then credits every decision with the total score that followed." },
-  "Q-learning": { short: "Q-learning", module: "Module 3: Off-policy TD",
-    idea: "After every step, nudges its estimate towards the reward plus the value of the best next move." },
-  SARSA: { short: "SARSA", module: "Module 3: On-policy TD",
-    idea: "Like Q-learning, but learns from the move it will actually make, exploration included. Plays it safer." },
-  "n-step SARSA (n=4)": { short: "n-step SARSA", module: "Module 4: n-step bootstrapping",
-    idea: "Looks four steps ahead before updating, trading bias for variance." },
-  "Dyna-Q (k=10)": { short: "Dyna-Q", module: "Module 4: Planning + learning",
-    idea: "Builds its own model of the Moon and rehearses ten imagined steps for every real one." },
-  DQN: { short: "Deep Q-Network", module: "Module 5: Deep RL",
-    idea: "A neural network reads a 5×5 camera view, so it can drive on terrain it has never seen." },
-  Heuristic: { short: "Rule-based", module: "Baseline",
-    idea: "Hand-written rules with the full map and shortest paths. Strong, but given knowledge the learners never see." },
-  Random: { short: "Random", module: "Baseline", idea: "Presses random valid buttons." },
+export const AGENT_INFO: Record<string, { short: string; tags: string[]; idea: string }> = {
+  "Value Iteration": { short: "Value Iteration", tags: ["Model-based", "Planning", "Table"],
+    idea: "Is given the exact probabilities of the simulator and solves the Bellman equations. It gives the optimal policy, so it is our reference, not a learner." },
+  "Monte Carlo": { short: "Monte Carlo", tags: ["Model-free", "On-policy", "Table"],
+    idea: "Waits until the episode ends, then moves every visited Q(s, a) towards the full return that followed." },
+  "Q-learning": { short: "Q-learning", tags: ["Model-free", "Off-policy", "Table"],
+    idea: "After every step, moves Q(s, a) towards the reward plus the value of the best next action." },
+  SARSA: { short: "SARSA", tags: ["Model-free", "On-policy", "Table"],
+    idea: "Same update, but uses the next action it will actually take, exploration included, so it learns a more cautious policy." },
+  "n-step SARSA (n=4)": { short: "n-step SARSA", tags: ["Model-free", "On-policy", "Table"],
+    idea: "Updates from four real rewards before bootstrapping, instead of one." },
+  "Dyna-Q (k=10)": { short: "Dyna-Q", tags: ["Learns a model", "Off-policy", "Table"],
+    idea: "Q-learning plus a learned model of the simulator: after each real step it replays ten imagined ones." },
+  DQN: { short: "Deep Q-Network", tags: ["Model-free", "Off-policy", "Neural network"],
+    idea: "A neural network estimates Q(s, a) from a 5 × 5 m camera view, trained with experience replay and a target network." },
+  Heuristic: { short: "Rule-based", tags: ["Baseline", "Hand-written"],
+    idea: "Hand-written rules that use the full map and shortest paths. No learning." },
+  Random: { short: "Random", tags: ["Baseline"], idea: "Picks a random valid action every step." },
 };
 
 /** Plain-English narration of what the rover is doing. */

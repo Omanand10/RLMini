@@ -75,24 +75,45 @@ export function heightAt(m: LunarMap, hz: Hazards, x: number, z: number) {
   return h;
 }
 
-export function buildTerrain(m: LunarMap, size = 56, segs = 448) {
-  const hz = hazards(m);
-  const g = new THREE.PlaneGeometry(size, size, segs, segs);
-  g.rotateX(-Math.PI / 2);
+function colorize(g: THREE.BufferGeometry, hz: Hazards) {
   const pos = g.attributes.position as THREE.BufferAttribute;
   const col = new Float32Array(pos.count * 3);
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i), z = pos.getZ(i);
-    pos.setY(i, heightAt(m, hz, x, z));
-    const n = fbm(x * 2.1, z * 2.1, 3);
-    let g0 = 0.5 + (n - 0.5) * 0.16 + (fbm(x * 0.35, z * 0.35, 3) - 0.5) * 0.1;
-    const sw = shadowWeight(hz, x, z);
+    let g0 = 0.5 + (fbm(x * 2.1, z * 2.1, 3) - 0.5) * 0.16 + (fbm(x * 0.35, z * 0.35, 3) - 0.5) * 0.1;
+    const sw = hz.shadows.length ? shadowWeight(hz, x, z) : 0;
     g0 *= 1 - 0.55 * sw;
     col[i * 3] = g0 * (1 - 0.05 * sw);
     col[i * 3 + 1] = g0 * (1 - 0.02 * sw);
     col[i * 3 + 2] = g0 * (1 + 0.1 * sw);
   }
   g.setAttribute("color", new THREE.BufferAttribute(col, 3));
-  g.computeVertexNormals();
-  return { geometry: g, hz };
+}
+
+/**
+ * Two meshes keep the vertex count low (~35k instead of 200k):
+ * a fine mesh over the 12x12 mission grid (craters need detail there) and a coarse
+ * ring for the distant highlands. The ring is pushed down under the fine mesh.
+ */
+export function buildTerrain(m: LunarMap) {
+  const hz = hazards(m);
+  const half = m.W / 2 + 1;                       // fine mesh covers the grid plus 1 m
+  const inner = new THREE.PlaneGeometry(2 * half, 2 * half, 168, 168);
+  inner.rotateX(-Math.PI / 2);
+  const ip = inner.attributes.position as THREE.BufferAttribute;
+  for (let i = 0; i < ip.count; i++) ip.setY(i, heightAt(m, hz, ip.getX(i), ip.getZ(i)));
+  colorize(inner, hz);
+  inner.computeVertexNormals();
+
+  const outer = new THREE.PlaneGeometry(64, 64, 64, 64);
+  outer.rotateX(-Math.PI / 2);
+  const op = outer.attributes.position as THREE.BufferAttribute;
+  for (let i = 0; i < op.count; i++) {
+    const x = op.getX(i), z = op.getZ(i);
+    const inside = Math.abs(x) < half - 0.01 && Math.abs(z) < half - 0.01;
+    op.setY(i, inside ? heightAt(m, hz, x, z) - 0.6 : heightAt(m, hz, x, z));
+  }
+  colorize(outer, { craters: [], slopes: [], shadows: [] });
+  outer.computeVertexNormals();
+  return { inner, outer, hz };
 }

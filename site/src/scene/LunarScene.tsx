@@ -28,7 +28,7 @@ function usePlayer(p: Player) {
 export function LunarScene({ player, opts }: { player: Player; opts: SceneOptions }) {
   usePlayer(player);
   const m = player.map;
-  const { geometry, hz } = useMemo(() => buildTerrain(m), [m]);
+  const { inner, outer, hz } = useMemo(() => buildTerrain(m), [m]);
   const h = (x: number, z: number) => heightAt(m, hz, x, z);
 
   const onDown = (e: ThreeEvent<PointerEvent>) => {
@@ -45,9 +45,12 @@ export function LunarScene({ player, opts }: { player: Player; opts: SceneOption
       <Sun player={player} />
       <ambientLight intensity={0.07} />
       <hemisphereLight args={["#9fb4d8", "#000", 0.08]} />
-      <Stars radius={90} depth={40} count={3500} factor={3} saturation={0} fade speed={0.2} />
+      <Stars radius={90} depth={40} count={1500} factor={3} saturation={0} fade speed={0} />
       <Earth />
-      <mesh geometry={geometry} receiveShadow castShadow onPointerDown={onDown}>
+      <mesh geometry={inner} receiveShadow castShadow onPointerDown={onDown}>
+        <meshStandardMaterial vertexColors roughness={1} metalness={0} />
+      </mesh>
+      <mesh geometry={outer} receiveShadow>
         <meshStandardMaterial vertexColors roughness={1} metalness={0} />
       </mesh>
       <Boulders m={m} hz={hz} />
@@ -91,8 +94,8 @@ function Sun({ player }: { player: Player }) {
     <>
       <primitive object={target} />
       <directionalLight ref={light} target={target} castShadow intensity={3} position={[10, 4, -8]}
-        shadow-mapSize={[2048, 2048]} shadow-bias={-0.0004} shadow-normalBias={0.06}
-        shadow-camera-left={-10} shadow-camera-right={10} shadow-camera-top={10} shadow-camera-bottom={-10}
+        shadow-mapSize={[1024, 1024]} shadow-bias={-0.0004} shadow-normalBias={0.06}
+        shadow-camera-left={-8} shadow-camera-right={8} shadow-camera-top={8} shadow-camera-bottom={-8}
         shadow-camera-near={1} shadow-camera-far={70} />
     </>
   );
@@ -239,7 +242,7 @@ function Rover({ player, h }: { player: Player; h: (x: number, z: number) => num
     g.current.position.set(x, h(x, z) + 0.1 - p.fall * 0.45, z);
     g.current.rotation.y += (((p.heading - g.current.rotation.y + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI) * 0.25;
     g.current.scale.setScalar(1 - p.fall * 0.3);
-    wheels.current.children.forEach((w) => { w.rotation.z -= dist * 6; });
+    wheels.current.children.forEach((w) => { w.rotation.y -= dist * 6; });   // spin about the axle (cylinder's own axis)
     const charging = player.cur?.ev === "recharge";
     const dead = player.done && (player.endEv === "battery_dead" || player.endEv === "night");
     panel.current.emissiveIntensity = charging ? 0.9 + 0.4 * Math.sin(performance.now() / 120) : 0;

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
+import { View3D } from "../scene/View3D";
 import { LunarScene, type AddedHazard, type SceneOptions } from "../scene/LunarScene";
 import { Player } from "../sim/player";
 import { ACTION_LABEL, AGENT_INFO, NARRATION, buildSteps, fixedMap, mapFor } from "../sim/episodes";
@@ -26,14 +27,11 @@ function Driver({ players }: { players: Player[] }) {
 // ---- 3D view with its status line ------------------------------------------------------------
 function World({ player, opts, agent, small }: { player: Player; opts: SceneOptions; agent: string; small?: boolean }) {
   return (
-    <div className={`mc-world ${small ? "small" : ""} ${opts.onCell ? "clickable" : ""}`}>
-      <Canvas shadows dpr={[1, 1.75]} camera={{ fov: 38, near: 0.1, far: 200 }} gl={{ antialias: true }}>
-        <Driver players={[player]} />
-        <LunarScene player={player} opts={opts} />
-      </Canvas>
-      <StatusLine player={player} agent={agent} />
-      {!small && <Legend />}
-    </div>
+    <View3D className={`mc-world ${small ? "small" : ""} ${opts.onCell ? "clickable" : ""}`}
+      overlay={<><StatusLine player={player} agent={agent} />{!small && <Legend />}</>}>
+      <Driver players={[player]} />
+      <LunarScene player={player} opts={opts} />
+    </View3D>
   );
 }
 
@@ -129,7 +127,7 @@ function PolicyPanel({ agent }: { agent: string }) {
   return (
     <section className="mc-card">
       <h3>Policy π: {info.short}</h3>
-      <p className="t-small muted">{info.module}</p>
+      <p className="tags">{info.tags.map((t) => <span key={t}>{t}</span>)}</p>
       <p>{info.idea}</p>
       <p className="t-small muted">During replay the agent acts greedily: in each state it takes the action with the highest learned value.</p>
     </section>
@@ -332,8 +330,7 @@ export default function MissionControl() {
     <section className="section mission-control" id="mission-control">
       <div className="wrap">
         <div className="opener">
-          <p className="clock"><i />Dusk: watch the agents work</p>
-          <h2 className="t-h2">Mission control</h2>
+          <h2 className="t-h2">Watch the agents drive</h2>
           <p className="t-lede muted">Each run is one episode: one lunar day. Press play and follow the line above the map. It shows the action the agent picked and the reward it got for it.</p>
         </div>
         <div className="mc-modes" role="tablist">
