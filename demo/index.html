@@ -706,7 +706,7 @@ const lvSel = document.getElementById("lv-map");
 const liveMaps = [["Landing zone (training map)", D.map]];
 Object.values(D.episodes).filter(E => E.map && E.agent === "DQN").forEach((E, i) => liveMaps.push([`Unseen hazard map ${i + 1}`, E.map]));
 lvSel.innerHTML = liveMaps.map(([n], i) => `<option value="${i}">${n}</option>`).join("");
-const LIVE_SEED = 2023;   // fixed so a rehearsed live run replays identically
+const LIVE_SEED = 21;     // fixed so a rehearsed live run replays identically
 let lvMap, lvRng = mulberry32(LIVE_SEED);
 function livePolicy(p) {
   const st = p.state, { a, q, mask } = dqnAct(p.m, st);
@@ -790,6 +790,25 @@ rpLoad();
 cpLoad(false);
 lvLoad(true);
 verify();
+// URL options, e.g. ?view=compare&a=Q-learning|train0&b=Q-learning|final0&speed=8&play=1
+(function urlOptions() {
+  const Q = new URLSearchParams(location.search);
+  const sp = Q.get("speed");
+  if (sp) for (const id of ["rp-speed", "cp-speed", "lv-speed"]) { const el = document.getElementById(id); el.value = sp; el.dispatchEvent(new Event("input")); }
+  if (Q.get("ep") && D.episodes[Q.get("ep")]) { rpSel.value = Q.get("ep"); rpLoad(); }
+  if (Q.get("a") && D.episodes[Q.get("a")]) cpA.sel.value = Q.get("a");
+  if (Q.get("b") && D.episodes[Q.get("b")]) cpB.sel.value = Q.get("b");
+  if (Q.get("a") || Q.get("b")) cpLoad(false);
+  const v = Q.get("view");
+  if (v) document.querySelector(`nav button[data-view=${v}]`)?.click();
+  if (Q.get("play")) {
+    if (v === "compare") document.getElementById("cp-play").click();
+    else if (v === "live") document.getElementById("lv-play").click();
+    else { rp.playing = true; rpBtn.textContent = "Pause"; }
+  }
+  const skip = +Q.get("skip") || 0;     // fast-forward (used for report screenshots)
+  for (let t = 0; t < skip; t += 50) for (const p of players) if (p.cv.offsetParent) p.advance(50);
+})();
 let last = performance.now();
 (function loop(now) {
   const dt = Math.min(100, now - last); last = now;
