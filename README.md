@@ -1,37 +1,40 @@
-# Project Pragyan: RL Mission Planner for the Chandrayaan-3 Lunar Rover
+# Project Pragyan: an RL mission planner for the Chandrayaan-3 lunar rover
 
-This project trains an RL agent to plan Pragyan's day on the Moon. The agent has to:
-- Sample science sites with the correct instrument (LIBS or APXS).
+This is an RL Lab CA mini project. A reinforcement-learning agent plans Pragyan's lunar day. It has to:
+- Sample science sites with the right instrument (LIBS or APXS).
 - Relay the data through the Vikram lander.
 - Manage battery and sunlight.
 - Avoid craters on slippery regolith.
 - Hibernate safely before lunar night.
 
-The environment is inspired by the mission. It is not a replica of the real terrain.
-
-## Run
-```bash
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m pragyan.env          # environment self-check
-.venv/bin/python train.py                # trains + evaluates every agent (~20-30 min, 10 cores)
-.venv/bin/python plots.py                # figures -> results/plots/
-open demo/index.html                     # simulation demo (works offline)
 ```
-`train.py --quick` runs a 2-minute smoke test of the whole pipeline.
+rllabca/
+├── docs/     rubric, report template, verified mission facts
+├── rl/       Python RL project: environment, agents, training, plots, results
+├── report/   report generator + Pragyan_RL_Report.docx
+└── site/     3D website + interactive mission simulator (Vite + React + three.js)
+```
 
-## Files
-| Path | What |
-|---|---|
-| `pragyan/env.py` | `PragyanEnv` (Gymnasium) holds the MDP. `outcomes()` is the single source of truth for the dynamics. |
-| `pragyan/tabular.py` | Value Iteration, Monte Carlo control, Q-learning, SARSA, n-step SARSA, Dyna-Q, and the baselines |
-| `pragyan/dqn.py` | DQN with experience replay, a target network, Double-DQN targets and n-step returns |
-| `train.py` | Experiments: main runs, hyper-parameter sweeps and evaluation. Writes `results/` and `demo/data.js`. |
-| `plots.py` | Every graph used in the report |
-| `demo/index.html` | Lunar simulation with three modes: Replay, Head-to-Head, and Live crater-drop (DQN runs in the browser) |
+## RL project (`rl/`)
+```bash
+python3 -m venv .venv && .venv/bin/pip install -r rl/requirements.txt
+cd rl
+../.venv/bin/python -m pragyan.env          # environment self-check
+../.venv/bin/python train.py                # train + evaluate every agent (~35 min on 10 cores)
+../.venv/bin/python plots.py                # figures -> results/plots/
+../.venv/bin/python export_site_data.py     # data for the website
+```
+- `pragyan/env.py` holds `PragyanEnv`, a Gymnasium environment. `outcomes()` is the single source of truth for the dynamics.
+- `pragyan/tabular.py` holds Value Iteration, Monte Carlo control, Q-learning, SARSA, n-step SARSA, Dyna-Q and the baselines.
+- `pragyan/dqn.py` holds the DQN: replay, target network, Double-DQN targets, n-step returns and action masking.
 
-## Demo modes
-- **Mission Replay:** watch any agent at episode 1, mid-training, or after training.
-- **Head-to-Head:** two agents on the same map, side by side.
-- **Live: Drop a Crater:** click to add craters or boulders while the DQN rover drives. It replans on every step, as Pragyan did at the 4 m crater on 27 Aug 2023.
+## Report (`report/`)
+`../.venv/bin/python make_report.py` rebuilds `Pragyan_RL_Report.docx` in the LAB CA template format from `rl/results`.
 
-The badge in the header confirms that the JavaScript environment reproduces every recorded Python transition and every DQN decision.
+## Website (`site/`)
+```bash
+cd site && npm install
+npm run dev                          # development
+npm run build && npm run preview     # offline presentation build
+npm test                             # TypeScript simulator == Python environment check
+```

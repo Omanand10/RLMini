@@ -1,5 +1,7 @@
-results/run.pkl
-__pycache__/
 .venv/
+__pycache__/
 .DS_Store
+rl/results/run.pkl
 report/screens/
+site/node_modules/
+site/dist/

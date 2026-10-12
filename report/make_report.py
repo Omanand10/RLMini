@@ -1,7 +1,7 @@
 """Build report/Pragyan_RL_Report.docx in the LAB CA mini-project template format.
 
-Numbers come from results/metrics.json (and results/run.pkl for convergence
-statistics), figures from results/plots/. Run after train.py and plots.py.
+Numbers come from rl/results/metrics.json (and rl/results/run.pkl for convergence
+statistics), figures from rl/results/plots/. Run after train.py and plots.py.
 """
 import json
 import os
@@ -16,14 +16,15 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-PLOTS = os.path.join(ROOT, "results", "plots")
-ASSETS = os.path.join(ROOT, "report", "assets")
+HERE = os.path.dirname(os.path.abspath(__file__))
+RESULTS = os.path.join(HERE, "..", "rl", "results")
+PLOTS = os.path.join(RESULTS, "plots")
+ASSETS = os.path.join(HERE, "assets")
 RED = RGBColor(0xBC, 0x20, 0x2E)
 FONT = "Times New Roman"
 REPO = "https://github.com/Omanand10/RLMini/tree/feat/pragyan-rover"
 
-M = json.load(open(os.path.join(ROOT, "results", "metrics.json")))
+M = json.load(open(os.path.join(RESULTS, "metrics.json")))
 T = M["fixed_map"]
 G = M["dqn_generalization"]
 SW = M["sweeps"]
@@ -37,7 +38,7 @@ def pct(x):
 
 def conv_stats():
     """Episodes to reach 90% of final smoothed return, from the training logs."""
-    path = os.path.join(ROOT, "results", "run.pkl")
+    path = os.path.join(RESULTS, "run.pkl")
     if not os.path.exists(path):
         return {}
     run = pickle.load(open(path, "rb"))
@@ -720,6 +721,6 @@ code("bs, ba, br, bs2, bd, bm2, bg = buf.sample(rng, batch)\n"
      "    y = br + bg * (1 - bd) * q2                                     # bg = gamma ** n\n"
      "loss = smooth_l1_loss(q(bs).gather(1, ba[:, None]).squeeze(1), y)")
 
-out = os.path.join(ROOT, "report", "Pragyan_RL_Report.docx")
+out = os.path.join(HERE, "Pragyan_RL_Report.docx")
 doc.save(out)
 print("wrote", out)

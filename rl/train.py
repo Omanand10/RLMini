@@ -1,5 +1,5 @@
 """Train and evaluate every agent, then write results/run.pkl, results/metrics.json
-and demo/data.js. Plots are drawn by plots.py from results/run.pkl.
+and the site data (export_site_data.py). Plots are drawn by plots.py.
 
     python train.py            # full run (~15-20 min on 10 cores)
     python train.py --quick    # smoke test (~1 min)
@@ -154,7 +154,6 @@ def main():
     ap.add_argument("--workers", type=int, default=9)
     args = ap.parse_args()
     os.makedirs(os.path.join(ROOT, "results"), exist_ok=True)
-    os.makedirs(os.path.join(ROOT, "demo"), exist_ok=True)
 
     todo = jobs(args.quick)
     t0 = time.time()
@@ -174,7 +173,8 @@ def main():
     with open(os.path.join(ROOT, "results", "run.pkl"), "wb") as f:
         pickle.dump(run, f)
     write_metrics(run)
-    write_demo_data(run)
+    from export_site_data import export
+    export(run)
     print(f"finished in {time.time()-t0:.0f}s")
 
 
@@ -210,43 +210,6 @@ def write_metrics(run):
            "dqn_hparams": d["hparams"], "total_time_s": round(run["total_time"], 1), "quick": run["quick"]}
     with open(os.path.join(ROOT, "results", "metrics.json"), "w") as f:
         json.dump(out, f, indent=2)
-
-
-def write_demo_data(run):
-    R = by_name(run)
-    eps = {}
-
-    def add(key, label, frames, m=None, agent=""):
-        if frames:
-            eps[key] = {"label": label, "agent": agent, "frames": frames, "map": m}
-
-    for name in ("Q-learning", "SARSA", "n-step SARSA (n=4)", "Monte Carlo", "Dyna-Q (k=10)"):
-        r = R[name]
-        n = r["episodes"]
-        for ep, lab in ((0, "episode 1 (untrained)"), (n // 10, f"episode {n//10:,} (learning)"), (n // 2, f"episode {n//2:,} (improving)")):
-            add(f"{name}|train{ep}", f"{name} - {lab}", r["recordings"].get(ep), agent=name)
-        for i, fr in enumerate(r["final_episodes"]):
-            add(f"{name}|final{i}", f"{name} - trained (eval run {i+1})", fr, agent=name)
-    for name in ("Value Iteration", "Heuristic", "Random"):
-        for i, fr in enumerate(R[name]["final_episodes"]):
-            add(f"{name}|final{i}", f"{name} (run {i+1})", fr, agent=name)
-    d = R["DQN"]
-    for i, fr in enumerate(d["final_episodes"]["fixed"]):
-        add(f"DQN|final{i}", f"DQN - trained (run {i+1})", fr, agent="DQN")
-    for i, fr in enumerate(d["final_episodes"]["perturbed"]):
-        add(f"DQN|unseen{i}", f"DQN - unseen hazard map {i+1}", fr, m=d["perturbed_maps"][i], agent="DQN")
-    for i, fr in enumerate(R["Heuristic"]["final_episodes_perturbed"]):
-        add(f"Heuristic|unseen{i}", f"Heuristic - unseen hazard map {i+1}", fr, m=d["perturbed_maps"][i], agent="Heuristic")
-
-    consts = {k: getattr(E, k) for k in ("SLIP_P", "DRAIN_P", "DRAIN_P_SLOPE", "PHASE_P", "COMM_RADIUS", "MAX_BATTERY",
-                                         "MAX_STEPS", "R_STEP", "R_SLOPE", "R_BUMP", "R_SAMPLE", "R_SENT", "R_WRONG",
-                                         "R_CRATER", "R_DEAD", "R_SLEEP_SAFE", "R_SLEEP_UNSAFE", "R_NIGHT", "R_MISSION",
-                                         "VIEW", "FEATURE_DIM")}
-    table = json.load(open(os.path.join(ROOT, "results", "metrics.json")))["fixed_map"]
-    data = {"map": run["map"], "consts": consts, "actions": E.ACTION_NAMES, "episodes": eps,
-            "dqn": {"layers": d["weights"], "checks": d["checks"]}, "table": table}
-    with open(os.path.join(ROOT, "demo", "data.js"), "w") as f:
-        f.write("window.DATA = " + json.dumps(data, separators=(",", ":")) + ";\n")
 
 
 if __name__ == "__main__":
