@@ -126,3 +126,9 @@
   .mc-main { grid-template-columns: 1fr; height: auto; }
   .mc-main .mc-world { height: 60svh; }
 }
+/* minimap overlaid in the bottom-right corner of the 3D view */
+.mc-minimap { position: absolute; right: 0.9rem; bottom: 0.9rem; width: min(15rem, 26%); padding: 0.45rem; background: rgba(0, 0, 0, 0.7); border: 1px solid var(--rule-dark); border-radius: 6px; }
+.mc-minimap .mm-title { display: block; font-size: 0.72rem; color: var(--on-dark-soft); margin: 0 0 0.3rem 0.1rem; }
+.mc-minimap svg { display: block; width: 100%; height: auto; border-radius: 3px; }
+.mc-minimap svg.clickable { cursor: crosshair; }
+.mc-world:not(.clickable) .mc-minimap { pointer-events: none; }

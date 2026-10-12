@@ -16,7 +16,8 @@ export function View3D({ children, overlay, className, fov = 38 }: {
   useEffect(() => {
     const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { rootMargin: "120px" });
     io.observe(ref.current!);
-    return () => io.disconnect();
+    const t = setTimeout(() => window.dispatchEvent(new Event("resize")), 300);   // re-measure once the grid has settled
+    return () => { io.disconnect(); clearTimeout(t); };
   }, []);
   return (
     <div ref={ref} className={className}>

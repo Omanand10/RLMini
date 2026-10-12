@@ -15,6 +15,8 @@ export interface SceneOptions {
   camera?: "hero" | "control";
   /** hazards dropped by the user in live mode: drawn as separate meshes, terrain is never rebuilt */
   added?: AddedHazard[];
+  /** bump to rebuild the terrain (an original hazard was removed or restored) */
+  terrainKey?: number;
   onCell?: (r: number, c: number, shift: boolean) => void;
 }
 
@@ -28,7 +30,9 @@ function usePlayer(p: Player) {
 export function LunarScene({ player, opts }: { player: Player; opts: SceneOptions }) {
   usePlayer(player);
   const m = player.map;
-  const { inner, outer, hz } = useMemo(() => buildTerrain(m), [m]);
+  const skip = useMemo(() => new Set((opts.added ?? []).map((a) => a.r * 100 + a.c)), [opts.added]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const { inner, outer, hz } = useMemo(() => buildTerrain(m, skip), [m, opts.terrainKey]);
   const h = (x: number, z: number) => heightAt(m, hz, x, z);
 
   const onDown = (e: ThreeEvent<PointerEvent>) => {
@@ -53,7 +57,7 @@ export function LunarScene({ player, opts }: { player: Player; opts: SceneOption
       <mesh geometry={outer} receiveShadow>
         <meshStandardMaterial vertexColors roughness={1} metalness={0} />
       </mesh>
-      <Boulders m={m} hz={hz} />
+      <Boulders m={m} hz={hz} skip={skip} />
       {opts.added && <AddedHazards m={m} h={h} added={opts.added} />}
       <Vikram m={m} h={h} />
       <Sites player={player} h={h} labels={!!opts.labels} />
@@ -124,11 +128,11 @@ function rockGeometry(k: number) {
   return geo;
 }
 
-function Boulders({ m, hz }: { m: LunarMap; hz: Hazards }) {
+function Boulders({ m, hz, skip }: { m: LunarMap; hz: Hazards; skip: Set<number> }) {
   const rocks = useMemo(() => {
     const out: { pos: [number, number, number]; geo: THREE.BufferGeometry; rot: number; s: number }[] = [];
     let k = 0;
-    for (let r = 0; r < m.H; r++) for (let c = 0; c < m.W; c++) if (m.terrain[r][c] === BOULDER) {
+    for (let r = 0; r < m.H; r++) for (let c = 0; c < m.W; c++) if (m.terrain[r][c] === BOULDER && !skip.has(r * 100 + c)) {
       const [x, z] = cellToWorld(m, r, c);
       const geo = rockGeometry(k);
       out.push({ pos: [x, heightAt(m, hz, x, z) + 0.12, z], geo, rot: k * 1.7, s: 0.36 + 0.06 * ((k * 7) % 3) });

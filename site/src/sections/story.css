@@ -216,3 +216,16 @@
 .end-grid { display: grid; gap: 0; }
 .night .night-line { color: var(--on-dark); }
 @media (max-width: 1000px) { .concl-grid { grid-template-columns: 1fr; } }
+
+/* environment slide */
+.env-grid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3rem; align-items: start; }
+.env-grid .mapchart { height: 66svh; }
+.env-key { margin: 0; display: grid; gap: 0; border-top: 2px solid var(--ink); }
+.env-key div { display: grid; grid-template-columns: 13.5rem 1fr; gap: 1rem; padding: 0.55rem 0; border-bottom: 1px solid var(--rule-light); }
+.env-key dt { font-weight: 640; display: flex; align-items: center; gap: 0.6rem; font-size: 1rem; }
+.env-key dd { margin: 0; color: var(--ink-soft); font-size: 0.95rem; line-height: 1.42; }
+.env-key dd b { color: var(--ink); }
+.key-swatch { display: inline-block; flex: none; }
+.mdp-list.three { columns: 3; column-gap: 2.5rem; }
+.mdp-list em { font-style: normal; font-weight: 600; color: var(--ink); }
+@media (max-width: 1000px) { .env-grid { grid-template-columns: 1fr; } .env-grid .mapchart { height: auto; width: 100%; } .env-key div { grid-template-columns: 1fr; gap: 0.2rem; } .mdp-list.three { columns: 1; } }

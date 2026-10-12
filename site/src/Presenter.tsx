@@ -23,12 +23,13 @@ export default function Presenter() {
     list.forEach((s) => s.querySelectorAll<HTMLElement>(STAGGER).forEach((el, i) => el.style.setProperty("--i", String(i))));
     const io = new IntersectionObserver((entries) => {
       for (const e of entries) {
-        if (e.intersectionRatio > 0.45) {
+        // a slide counts as current when it covers most of the screen (works for slides taller than the screen too)
+        if (e.intersectionRatio > 0.45 || e.intersectionRect.height > window.innerHeight * 0.55) {
           e.target.classList.add("in-view");
           setCurrent(list.indexOf(e.target as HTMLElement));
         }
       }
-    }, { threshold: [0, 0.45, 0.8] });
+    }, { threshold: [0, 0.2, 0.45, 0.6, 0.8] });
     list.forEach((s) => io.observe(s));
     return () => io.disconnect();
   }, []);

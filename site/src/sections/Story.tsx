@@ -80,6 +80,41 @@ const REWARDS = (K: Record<string, number>): [string, number][] => [
   ["Crater or empty battery", K.R_CRATER],
 ];
 
+export function Environment() {
+  const K = DATA.consts;
+  return (
+    <section className="section panel morning" id="environment" data-slide="The environment">
+      <div className="wrap">
+        <div className="panel-head">
+          <h2 className="t-h2">The environment</h2>
+          <p className="t-lede muted">A 12 × 12 m landing zone, one square per metre. Every square is one possible rover position.</p>
+        </div>
+        <div className="env-grid">
+          <MapChart />
+          <dl className="env-key">
+            <div><dt><i className="key-swatch start" />Start state s₀</dt>
+              <dd>Every episode begins here, next to Vikram, with a full battery in the morning.</dd></div>
+            <div><dt><i className="key-swatch site-s" />Sulphur site</dt>
+              <dd>Goal: +{K.R_SAMPLE} for sampling it with <b>LIBS</b>, a laser that turns a speck of soil into glowing plasma; the colours of that light show which elements it contains. Pragyan's LIBS found sulphur.</dd></div>
+            <div><dt><i className="key-swatch site-e" />Element site</dt>
+              <dd>Goal: +{K.R_SAMPLE} for sampling it with <b>APXS</b>, which fires alpha particles at the soil and reads the X-rays that come back, revealing elements such as magnesium, silicon, calcium and iron.</dd></div>
+            <div><dt><i className="key-swatch vikram" />Vikram and relay range</dt>
+              <dd>The rover can only reach Earth through Vikram. Transmitting inside the dashed square earns +{K.R_SENT} per sample held.</dd></div>
+            <div><dt><i className="key-swatch crater" />Crater</dt>
+              <dd>Terminal state: {K.R_CRATER} and the episode ends. Wheel slips can push the rover in from a neighbouring square.</dd></div>
+            <div><dt><i className="key-swatch shadow" />Permanent shadow</dt>
+              <dd>Drivable, but recharging gives nothing here.</dd></div>
+            <div><dt><i className="key-swatch slope" />Slope</dt>
+              <dd>Drivable, but costs an extra point per move and drains the battery faster.</dd></div>
+            <div><dt><i className="key-swatch boulder" />Boulder</dt>
+              <dd>Blocked: a drive into it fails and the rover stays where it is.</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function RLProblem() {
   return (
     <section className="section panel morning" id="problem" data-slide="The RL problem">
@@ -88,51 +123,41 @@ export function RLProblem() {
           <h2 className="t-h2">The reinforcement-learning problem</h2>
           <p className="t-lede muted">The rover's lunar day written as a Markov decision process.</p>
         </div>
-        <div className="rl-grid">
-          <figure className="map-figure">
-            <MapChart />
-            <figcaption>
-              <span><i className="key-swatch start" />Start state</span>
-              <span><i className="key-swatch site-s" />Sulphur site (LIBS)</span>
-              <span><i className="key-swatch site-e" />Element site (APXS)</span>
-              <span><i className="key-swatch vikram" />Vikram; dashed = relay range</span>
-              <span><i className="key-swatch crater" />Crater (terminal)</span>
-              <span><i className="key-swatch shadow" />Shadow (no charging)</span>
-              <span><i className="key-swatch slope" />Slope (drains battery)</span>
-              <span><i className="key-swatch boulder" />Boulder (blocked)</span>
-            </figcaption>
-          </figure>
-          <ul className="mdp-list">
-            <li><b>Agent</b> The program that chooses the rover's next command. It starts with no knowledge of the map.</li>
-            <li><b>Environment</b> A 12 × 12 m simulated landing zone, one cell per metre. It is stochastic:
-              <ul>
-                <li>drive commands slip 45° sideways 10% of the time,</li>
-                <li>moves may drain the battery, more often on slopes,</li>
-                <li>the sun moves morning → noon → dusk at random times.</li>
-              </ul>
-            </li>
-            <li><b>State sₜ</b> The information the agent uses to choose its action at step t:
-              <ul>
-                <li>rover position (row, column) and battery level 0–5,</li>
-                <li>each site: not sampled, sampled, or relayed,</li>
-                <li>sun phase: morning, noon or dusk.</li>
-              </ul>
-            </li>
-            <li><b>Actions aₜ</b> 13 commands:
-              <ul>
-                <li>drive in 8 directions,</li>
-                <li>LIBS laser, APXS scan, transmit, recharge, sleep.</li>
-              </ul>
-            </li>
-            <li><b>Episode</b> One lunar day, from the start state to a terminal state:
-              <ul>
-                <li>goal: all four results relayed, then a safe sleep at dusk,</li>
-                <li>terminal: crater, empty battery, nightfall or sleep.</li>
-              </ul>
-            </li>
-            <li><b>Policy π(s)</b> The action to take in each state. Agents learn Q(s, a), the expected return of action a in state s, and act greedily on it.</li>
-          </ul>
-        </div>
+        <ul className="mdp-list three">
+          <li><b>Agent</b> The program that chooses the rover's next command. It starts with no knowledge of the map.</li>
+          <li><b>Environment</b> The landing zone on the previous slide. It is stochastic:
+            <ul>
+              <li>drive commands slip 45° sideways 10% of the time,</li>
+              <li>moves may drain the battery, more often on slopes,</li>
+              <li>the sun moves on at random times.</li>
+            </ul>
+          </li>
+          <li><b>State sₜ</b> Four pieces of information the agent uses to choose its action at step t:
+            <ul>
+              <li><em>Position</em>: row and column, 0–11. Tells it which square it is on and what is around it.</li>
+              <li><em>Battery</em>: 0–5. Driving, sampling and transmitting use charge; recharging adds 1 (2 at noon); 0 ends the episode.</li>
+              <li><em>Site status</em>, for each of the 4 sites: not sampled, sampled but not yet relayed, or relayed. 3⁴ = 81 combinations.</li>
+              <li><em>Sun phase</em>: morning, noon or dusk. Noon charges fastest; sleeping is only allowed at dusk; after dusk comes night.</li>
+            </ul>
+            <span className="note">{DATA.valueIteration.n_reachable_states.toLocaleString()} different states can occur. The neural-network agent instead sees a 5 × 5 m window around the rover.</span>
+          </li>
+          <li><b>Actions aₜ</b> 13 commands:
+            <ul>
+              <li>drive in 8 directions (N, NE, E, SE, S, SW, W, NW),</li>
+              <li>LIBS laser or APXS scan on the current square,</li>
+              <li>transmit held results through Vikram,</li>
+              <li>recharge from sunlight,</li>
+              <li>sleep for the night.</li>
+            </ul>
+          </li>
+          <li><b>Episode</b> One lunar day, from the start state to a terminal state:
+            <ul>
+              <li>goal: all four results relayed, then a safe sleep at dusk,</li>
+              <li>terminal: crater, empty battery, nightfall or sleep.</li>
+            </ul>
+          </li>
+          <li><b>Policy π(s)</b> The action to take in each state. Agents learn Q(s, a), the expected return of action a in state s, and act greedily on it.</li>
+        </ul>
       </div>
     </section>
   );

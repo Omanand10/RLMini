@@ -44,9 +44,11 @@ function bowl(d: number, R: number, depth: number) {
 
 export interface Hazards { craters: [number, number][]; slopes: [number, number][]; shadows: [number, number][] }
 
-export function hazards(m: LunarMap): Hazards {
+/** skip: cells (r*100+c) drawn separately, e.g. craters dropped live, so they are not baked into the mesh */
+export function hazards(m: LunarMap, skip?: Set<number>): Hazards {
   const hz: Hazards = { craters: [], slopes: [], shadows: [] };
   for (let r = 0; r < m.H; r++) for (let c = 0; c < m.W; c++) {
+    if (skip?.has(r * 100 + c)) continue;
     const t = m.terrain[r][c], p = cellToWorld(m, r, c);
     if (t === CRATER) hz.craters.push(p);
     else if (t === SLOPE) hz.slopes.push(p);
@@ -95,8 +97,8 @@ function colorize(g: THREE.BufferGeometry, hz: Hazards) {
  * a fine mesh over the 12x12 mission grid (craters need detail there) and a coarse
  * ring for the distant highlands. The ring is pushed down under the fine mesh.
  */
-export function buildTerrain(m: LunarMap) {
-  const hz = hazards(m);
+export function buildTerrain(m: LunarMap, skip?: Set<number>) {
+  const hz = hazards(m, skip);
   const half = m.W / 2 + 1;                       // fine mesh covers the grid plus 1 m
   const inner = new THREE.PlaneGeometry(2 * half, 2 * half, 168, 168);
   inner.rotateX(-Math.PI / 2);

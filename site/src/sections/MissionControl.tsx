@@ -28,7 +28,7 @@ function Driver({ players }: { players: Player[] }) {
 function World({ player, opts, agent, small }: { player: Player; opts: SceneOptions; agent: string; small?: boolean }) {
   return (
     <View3D className={`mc-world ${small ? "small" : ""} ${opts.onCell ? "clickable" : ""}`}
-      overlay={<><StatusLine player={player} agent={agent} />{!small && <Legend />}</>}>
+      overlay={<><StatusLine player={player} agent={agent} />{!small && <><Legend /><MiniMap player={player} onCell={opts.onCell} /></>}</>}>
       <Driver players={[player]} />
       <LunarScene player={player} opts={opts} />
     </View3D>
@@ -118,8 +118,8 @@ function MiniMap({ player, onCell }: { player: Player; onCell?: (r: number, c: n
   const pts = player.track.map(([tr, tc]) => `${tc * S + S / 2},${tr * S + S / 2}`).join(" ");
   const [vr, vc] = m.vikram;
   return (
-    <section className="mc-card minimap">
-      <h3>Top-down map</h3>
+    <div className="mc-minimap">
+      <span className="mm-title">Top-down view</span>
       <svg viewBox={`0 0 ${N * S} ${N * S}`} className={onCell ? "clickable" : ""} role="img" aria-label="Top-down map of the episode"
         onClick={(e) => {
           if (!onCell) return;
@@ -138,8 +138,7 @@ function MiniMap({ player, onCell }: { player: Player; onCell?: (r: number, c: n
         {player.track.length > 1 && <polyline points={pts} fill="none" stroke="#c9a13b" strokeWidth={1.2} strokeLinejoin="round" />}
         <circle cx={c * S + S / 2} cy={r * S + S / 2} r={2.8} fill="#fff" stroke="#000" strokeWidth={0.8} />
       </svg>
-      <p className="t-small muted">White dot = rover. Rings: red = sulphur site, blue = element site; filled gold once relayed.{onCell ? " Click a cell to drop a crater here too." : ""}</p>
-    </section>
+    </div>
   );
 }
 
@@ -238,7 +237,6 @@ function Replay({ speed, setSpeed }: { speed: number; setSpeed: (n: number) => v
       <div className="mc-main">
         <World player={player} agent={agent} opts={{ labels: false, range: true, camera: "control" }} />
         <aside className="mc-side">
-          <MiniMap player={player} />
           <EpisodeInfo agent={agent} epKey={epKey} />
           <Goals player={player} />
         </aside>
@@ -291,13 +289,17 @@ function Live({ speed, setSpeed }: { speed: number; setSpeed: (n: number) => voi
   const player = useMemo(() => { const p = new Player(fixedMap()); p.loadLive(makeMap(DATA.map), 21); return p; }, []);
   const [mapIdx, setMapIdx] = useState(0);
   const [added, setAdded] = useState<AddedHazard[]>([]);
-  const [note, setNote] = useState("Click the ground to drop a crater in the rover's way. Shift-click places a boulder. Click it again to remove it.");
+  const [removed, setRemoved] = useState<{ r: number; c: number; t: number }[]>([]);   // original hazards taken away
+  const [terrainKey, setTerrainKey] = useState(0);
+  const [note, setNote] = useState("Click the ground or the map to drop a crater. Shift-click places a boulder. Click any crater or boulder, including the original ones, to remove it.");
   useP(player);
   useEffect(() => { player.speed = speed; }, [speed, player]);
-  const load = (i: number) => { setMapIdx(i); setAdded([]); player.loadLive(LIVE_MAPS[i][1](), 21); };
-  const restart = () => {
+  const load = (i: number) => { setMapIdx(i); setAdded([]); setRemoved([]); player.loadLive(LIVE_MAPS[i][1](), 21); };
+  const restart = () => {      // back to the original map
     for (const a of added) player.map.terrain[a.r][a.c] = REGOLITH;
-    setAdded([]); player.reset();
+    for (const x of removed) player.map.terrain[x.r][x.c] = x.t;
+    if (removed.length) setTerrainKey((k) => k + 1);
+    setAdded([]); setRemoved([]); player.reset();
   };
   const onCell = (r: number, c: number, shift: boolean) => {
     const m = player.map, t = m.terrain[r][c];
@@ -312,7 +314,23 @@ function Live({ speed, setSpeed }: { speed: number; setSpeed: (n: number) => voi
     const busy = t === VIKRAM || m.siteAt.has(r * 100 + c) || (player.state[0] === r && player.state[1] === c) ||
       (player.cur !== null && player.cur.next[0] === r && player.cur.next[1] === c);
     if (busy) { setNote("That cell holds the rover, Vikram or a science site. Pick another one."); return; }
-    if (t === CRATER || t === BOULDER) { setNote("That hazard is part of the original map."); return; }
+    if (t === CRATER || t === BOULDER) {          // an original hazard: take it away and rebuild the ground
+      m.terrain[r][c] = REGOLITH;
+      setRemoved([...removed, { r, c, t }]);
+      setTerrainKey((k) => k + 1);
+      setNote(`Removed the original ${t === CRATER ? "crater" : "boulder"} at row ${r}, column ${c}. The rover may now take a shorter route.`);
+      player.replan();
+      return;
+    }
+    const gone = removed.find((x) => x.r === r && x.c === c);
+    if (gone && !shift) {                          // clicking a removed original hazard puts it back
+      m.terrain[r][c] = gone.t;
+      setRemoved(removed.filter((x) => x !== gone));
+      setTerrainKey((k) => k + 1);
+      setNote(`Restored the original ${gone.t === CRATER ? "crater" : "boulder"} at row ${r}, column ${c}.`);
+      player.replan();
+      return;
+    }
     const kind = shift ? "boulder" : "crater";
     m.terrain[r][c] = shift ? BOULDER : CRATER;
     setAdded([...added, { r, c, kind, t0: performance.now() }]);
@@ -333,16 +351,15 @@ function Live({ speed, setSpeed }: { speed: number; setSpeed: (n: number) => voi
         <button className="btn-primary" onClick={() => (player.playing ? player.pause() : player.play())}>
           {player.playing ? "Pause" : player.done ? "Run again" : player.i > 0 ? "Resume" : "Launch rover"}
         </button>
-        <button className="btn-ghost" onClick={restart}>Restart and clear craters</button>
+        <button className="btn-ghost" onClick={restart}>Restart on original map</button>
         <label className="field speed"><span>Speed</span>
           <input type="range" min={1} max={12} value={speed} onChange={(e) => setSpeed(+e.target.value)} />
         </label>
       </div>
       <div className="mc-main">
-        <World player={player} agent="DQN" opts={{ labels: false, range: true, navcam: true, camera: "control", added, onCell }} />
+        <World player={player} agent="DQN" opts={{ labels: false, range: true, navcam: true, camera: "control", added, terrainKey, onCell }} />
         <aside className="mc-side">
           <p className="live-note">{note}</p>
-          <MiniMap player={player} onCell={onCell} />
           <section className="mc-card brain">
             <h3>Q(s, a) right now</h3>
             <p className="t-small muted">Expected return after each action. The rover takes the top one (gold). It sees only the dashed 5 × 5 m camera square.</p>

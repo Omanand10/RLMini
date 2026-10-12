@@ -1,11 +1,11 @@
 import { useEffect, type ComponentType } from "react";
 import Hero from "./sections/Hero";
 import MissionControl from "./sections/MissionControl";
-import { Algorithms, Conclusion, Learning, Mission, Night, RLProblem, Results } from "./sections/Story";
+import { Algorithms, Conclusion, Environment, Learning, Mission, Night, RLProblem, Results } from "./sections/Story";
 import Presenter from "./Presenter";
 
 const SECTIONS: Record<string, ComponentType> = {
-  hero: Hero, mission: Mission, problem: RLProblem, learning: Learning, "mission-control": MissionControl,
+  hero: Hero, mission: Mission, environment: Environment, problem: RLProblem, learning: Learning, "mission-control": MissionControl,
   algorithms: Algorithms, results: Results, conclusion: Conclusion, night: Night,
 };
 
@@ -23,6 +23,7 @@ export default function App() {
       <Hero />
       <main>
         <Mission />
+        <Environment />
         <RLProblem />
         <Learning />
         <MissionControl />
