@@ -49,8 +49,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .section { position: relative; padding: clamp(96px, 15vh, 180px) var(--gutter); }
 .wrap { max-width: 1440px; margin: 0 auto; }
 .light { background: var(--regolith); color: var(--ink); }
+.morning { background: #dad8d2; color: var(--ink); }
 .noon { background: var(--regolith-hi); color: var(--ink); }
-.light .muted, .noon .muted { color: var(--ink-soft); }
+.light .muted, .morning .muted, .noon .muted { color: var(--ink-soft); }
 .muted { color: var(--on-dark-soft); }
 
 /* section opener: a time-of-day marker + headline + lede on a two-column grid */
