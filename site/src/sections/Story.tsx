@@ -274,7 +274,7 @@ export function Night() {
         <p className="night-line">Good night, Pragyan.</p>
         <p className="team">Om Dwivedi, 16010123213 &nbsp;&nbsp; Om Anand Jha, 16010123214</p>
         <div className="night-grid">
-          <p className="muted">Reinforcement Learning Lab mini project, Department of Computer Engineering, K. J. Somaiya School of Engineering, 2026. The simulation is inspired by ISRO's Chandrayaan-3 mission and is not an ISRO product.</p>
+          <p className="muted">Reinforcement Learning mini project, 2026. The simulation is inspired by ISRO's Chandrayaan-3 mission and is not an ISRO product.</p>
           <ul>
             <li><a href={REPO}>Source code on GitHub</a></li>
             <li><a href={`${REPO}/raw/main/report/Pragyan_RL_Report.docx`}>Download the project report</a></li>

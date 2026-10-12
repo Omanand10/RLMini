@@ -44,11 +44,13 @@ export default function Hero() {
           <a className="hero-link" href="#problem">See how the RL problem is set up</a>
         </div>
       </div>
-      <dl className="hero-facts">
-        <div><dt>Om Dwivedi</dt><dd className="tnum">16010123213</dd></div>
-        <div><dt>Om Anand Jha</dt><dd className="tnum">16010123214</dd></div>
-        <div><dt>Reinforcement Learning Lab, Semester VII</dt><dd>K. J. Somaiya School of Engineering</dd></div>
-      </dl>
+      <div className="hero-facts">
+        <p className="hero-course">Reinforcement Learning</p>
+        <dl>
+          <div><dt>Om Dwivedi</dt><dd className="tnum">16010123213</dd></div>
+          <div><dt>Om Anand Jha</dt><dd className="tnum">16010123214</dd></div>
+        </dl>
+      </div>
     </header>
   );
 }

@@ -15,3 +15,7 @@
 .hero-facts dt { font-size: 0.8125rem; color: var(--on-dark-soft); }
 .hero-facts dd { margin: 0; font-size: 1.25rem; font-weight: 560; font-stretch: 110%; }
 @media (max-width: 43.75rem) { .hero-facts { display: none; } .hero-copy { bottom: 3rem; } }
+.hero-facts { align-items: center; justify-content: space-between; }
+.hero-course { margin: 0; font-size: 2rem; line-height: 1; font-weight: 700; font-stretch: 125%; letter-spacing: -0.02em; }
+.hero-facts dl { display: flex; gap: clamp(1.25rem, 4vw, 4rem); margin: 0; }
+.hero-facts dl div { display: grid; gap: 0.125rem; }
