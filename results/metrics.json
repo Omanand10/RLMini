@@ -1,0 +1,357 @@
+{
+  "fixed_map": {
+    "Value Iteration": {
+      "return_mean": 103.912,
+      "return_std": 60.6632,
+      "success_rate": 0.74,
+      "steps_mean": 79.258,
+      "sent_mean": 3.526,
+      "crater_rate": 0.016,
+      "battery_rate": 0.0,
+      "night_rate": 0.072,
+      "return_std_seeds": 5.5843,
+      "success_std_seeds": 0.021
+    },
+    "Q-learning": {
+      "return_mean": 75.848,
+      "return_std": 47.1283,
+      "success_rate": 0.402,
+      "steps_mean": 76.988,
+      "sent_mean": 3.086,
+      "crater_rate": 0.03,
+      "battery_rate": 0.002,
+      "night_rate": 0.014,
+      "return_std_seeds": 2.8959,
+      "success_std_seeds": 0.0354,
+      "train_time_s": 828.2,
+      "episodes": 300000
+    },
+    "SARSA": {
+      "return_mean": 57.396,
+      "return_std": 41.3993,
+      "success_rate": 0.292,
+      "steps_mean": 77.346,
+      "sent_mean": 2.594,
+      "crater_rate": 0.002,
+      "battery_rate": 0.006,
+      "night_rate": 0.012,
+      "return_std_seeds": 1.8082,
+      "success_std_seeds": 0.0366,
+      "train_time_s": 818.8,
+      "episodes": 300000
+    },
+    "n-step SARSA (n=4)": {
+      "return_mean": 16.352,
+      "return_std": 48.7588,
+      "success_rate": 0.0,
+      "steps_mean": 74.896,
+      "sent_mean": 2.0,
+      "crater_rate": 0.028,
+      "battery_rate": 0.018,
+      "night_rate": 0.014,
+      "return_std_seeds": 4.6384,
+      "success_std_seeds": 0.0,
+      "train_time_s": 1000.4,
+      "episodes": 300000
+    },
+    "Monte Carlo": {
+      "return_mean": -22.37,
+      "return_std": 55.4116,
+      "success_rate": 0.0,
+      "steps_mean": 75.442,
+      "sent_mean": 0.932,
+      "crater_rate": 0.044,
+      "battery_rate": 0.006,
+      "night_rate": 0.012,
+      "return_std_seeds": 4.5716,
+      "success_std_seeds": 0.0,
+      "train_time_s": 845.4,
+      "episodes": 300000
+    },
+    "Dyna-Q (k=10)": {
+      "return_mean": 58.48,
+      "return_std": 64.6687,
+      "success_rate": 0.35,
+      "steps_mean": 75.324,
+      "sent_mean": 3.186,
+      "crater_rate": 0.118,
+      "battery_rate": 0.022,
+      "night_rate": 0.128,
+      "return_std_seeds": 8.3381,
+      "success_std_seeds": 0.0303,
+      "train_time_s": 802.2,
+      "episodes": 60000
+    },
+    "Random": {
+      "return_mean": -109.356,
+      "return_std": 32.482,
+      "success_rate": 0.0,
+      "steps_mean": 19.912,
+      "sent_mean": 0.016,
+      "crater_rate": 0.782,
+      "battery_rate": 0.12,
+      "night_rate": 0.016,
+      "return_std_seeds": 1.1736,
+      "success_std_seeds": 0.0
+    },
+    "Heuristic": {
+      "return_mean": 79.76,
+      "return_std": 90.9681,
+      "success_rate": 0.726,
+      "steps_mean": 73.054,
+      "sent_mean": 3.236,
+      "crater_rate": 0.056,
+      "battery_rate": 0.104,
+      "night_rate": 0.094,
+      "return_std_seeds": 7.889,
+      "success_std_seeds": 0.0332
+    },
+    "DQN": {
+      "return_mean": 35.824,
+      "return_std": 72.76,
+      "success_rate": 0.242,
+      "steps_mean": 59.1,
+      "sent_mean": 2.758,
+      "crater_rate": 0.298,
+      "battery_rate": 0.024,
+      "night_rate": 0.034,
+      "return_std_seeds": 8.4161,
+      "success_std_seeds": 0.056,
+      "train_time_s": 880.2
+    }
+  },
+  "sweeps": {
+    "sweep:alpha=0.05": {
+      "return_mean": 73.5,
+      "success_rate": 0.362,
+      "train_time_s": 293.3
+    },
+    "sweep:alpha=0.1": {
+      "return_mean": 72.55,
+      "success_rate": 0.386,
+      "train_time_s": 297.2
+    },
+    "sweep:alpha=0.2": {
+      "return_mean": 72.49,
+      "success_rate": 0.378,
+      "train_time_s": 248.2
+    },
+    "sweep:alpha=0.5": {
+      "return_mean": 64.81,
+      "success_rate": 0.316,
+      "train_time_s": 253.6
+    },
+    "sweep:gamma=0.9": {
+      "return_mean": 72.73,
+      "success_rate": 0.366,
+      "train_time_s": 241.4
+    },
+    "sweep:gamma=0.95": {
+      "return_mean": 72.08,
+      "success_rate": 0.378,
+      "train_time_s": 249.1
+    },
+    "sweep:gamma=0.99": {
+      "return_mean": 72.55,
+      "success_rate": 0.386,
+      "train_time_s": 258.5
+    },
+    "sweep:eps_decay=0.3": {
+      "return_mean": 75.62,
+      "success_rate": 0.376,
+      "train_time_s": 300.2
+    },
+    "sweep:eps_decay=0.5": {
+      "return_mean": 78.86,
+      "success_rate": 0.418,
+      "train_time_s": 285.3
+    },
+    "sweep:eps_decay=0.8": {
+      "return_mean": 72.55,
+      "success_rate": 0.386,
+      "train_time_s": 267.1
+    },
+    "sweep:n=1": {
+      "return_mean": 34.15,
+      "success_rate": 0.05,
+      "train_time_s": 275.3
+    },
+    "sweep:n=2": {
+      "return_mean": 20.09,
+      "success_rate": 0.0,
+      "train_time_s": 254.6
+    },
+    "sweep:n=4": {
+      "return_mean": 8.96,
+      "success_rate": 0.0,
+      "train_time_s": 261.0
+    },
+    "sweep:n=8": {
+      "return_mean": 13.01,
+      "success_rate": 0.0,
+      "train_time_s": 259.3
+    },
+    "sweep:planning=0": {
+      "return_mean": 6.04,
+      "success_rate": 0.0,
+      "train_time_s": 49.9
+    },
+    "sweep:planning=5": {
+      "return_mean": 29.5,
+      "success_rate": 0.154,
+      "train_time_s": 134.3
+    },
+    "sweep:planning=10": {
+      "return_mean": 17.01,
+      "success_rate": 0.044,
+      "train_time_s": 201.3
+    },
+    "sweep:planning=25": {
+      "return_mean": 26.72,
+      "success_rate": 0.05,
+      "train_time_s": 280.6
+    }
+  },
+  "dqn_generalization": {
+    "DQN": {
+      "fixed": {
+        "return_mean": 35.824,
+        "return_std": 72.75996787203312,
+        "success_rate": 0.242,
+        "steps_mean": 59.1,
+        "sent_mean": 2.758,
+        "crater_rate": 0.29800000000000004,
+        "battery_rate": 0.024,
+        "night_rate": 0.034,
+        "return_std_seeds": 8.416064638535044,
+        "success_std_seeds": 0.05600000000000001
+      },
+      "perturbed": {
+        "return_mean": 8.49,
+        "return_std": 76.22166636995289,
+        "success_rate": 0.136,
+        "steps_mean": 54.428,
+        "sent_mean": 2.4019999999999997,
+        "crater_rate": 0.388,
+        "battery_rate": 0.044,
+        "night_rate": 0.024,
+        "return_std_seeds": 10.077515566844838,
+        "success_std_seeds": 0.0332264954516723
+      },
+      "random": {
+        "return_mean": -97.26,
+        "return_std": 60.772479965779006,
+        "success_rate": 0.0,
+        "steps_mean": 40.2,
+        "sent_mean": 0.11200000000000002,
+        "crater_rate": 0.13199999999999998,
+        "battery_rate": 0.518,
+        "night_rate": 0.046,
+        "return_std_seeds": 2.8563263118908524,
+        "success_std_seeds": 0.0
+      }
+    },
+    "Heuristic": {
+      "fixed": {
+        "return_mean": 79.76,
+        "return_std": 90.9681185255298,
+        "success_rate": 0.726,
+        "steps_mean": 73.054,
+        "sent_mean": 3.2359999999999998,
+        "crater_rate": 0.05600000000000001,
+        "battery_rate": 0.10400000000000001,
+        "night_rate": 0.094,
+        "return_std_seeds": 7.889012612488334,
+        "success_std_seeds": 0.03322649545167228
+      },
+      "perturbed": {
+        "return_mean": 47.11,
+        "return_std": 102.62908612428888,
+        "success_rate": 0.568,
+        "steps_mean": 65.68199999999999,
+        "sent_mean": 2.854,
+        "crater_rate": 0.252,
+        "battery_rate": 0.06799999999999999,
+        "night_rate": 0.08399999999999999,
+        "return_std_seeds": 3.9977493668312927,
+        "success_std_seeds": 0.024819347291981687
+      },
+      "random": {
+        "return_mean": 86.41799999999999,
+        "return_std": 97.16759927157776,
+        "success_rate": 0.712,
+        "steps_mean": 65.47200000000001,
+        "sent_mean": 3.314,
+        "crater_rate": 0.15,
+        "battery_rate": 0.044000000000000004,
+        "night_rate": 0.068,
+        "return_std_seeds": 10.809037699999013,
+        "success_std_seeds": 0.048332183894378294
+      }
+    },
+    "Random": {
+      "fixed": {
+        "return_mean": -109.356,
+        "return_std": 32.48202939737297,
+        "success_rate": 0.0,
+        "steps_mean": 19.912,
+        "sent_mean": 0.016,
+        "crater_rate": 0.782,
+        "battery_rate": 0.12,
+        "night_rate": 0.015999999999999997,
+        "return_std_seeds": 1.1736029993145032,
+        "success_std_seeds": 0.0
+      },
+      "perturbed": {
+        "return_mean": -112.91,
+        "return_std": 25.158118631389485,
+        "success_rate": 0.0,
+        "steps_mean": 18.536,
+        "sent_mean": 0.014000000000000002,
+        "crater_rate": 0.85,
+        "battery_rate": 0.094,
+        "night_rate": 0.002,
+        "return_std_seeds": 2.6292128099490175,
+        "success_std_seeds": 0.0
+      },
+      "random": {
+        "return_mean": -107.516,
+        "return_std": 42.61133092737074,
+        "success_rate": 0.0,
+        "steps_mean": 26.465999999999998,
+        "sent_mean": 0.02,
+        "crater_rate": 0.63,
+        "battery_rate": 0.182,
+        "night_rate": 0.032,
+        "return_std_seeds": 3.8040325971263718,
+        "success_std_seeds": 0.0
+      }
+    }
+  },
+  "value_iteration": {
+    "n_reachable_states": 156735,
+    "sweeps": 318,
+    "V_start": 67.46660132415943,
+    "plan_time": 143.87601685523987
+  },
+  "dqn_hparams": {
+    "nstep": 3,
+    "double": true,
+    "shaping": 1.0,
+    "randomize": "perturb",
+    "total_steps": 600000,
+    "lr": 0.0005,
+    "gamma": 0.99,
+    "batch": 128,
+    "buffer": 100000,
+    "warmup": 5000,
+    "train_every": 2,
+    "target_every": 1000,
+    "eps_start": 1.0,
+    "eps_end": 0.05,
+    "eps_frac": 0.4,
+    "hidden": 128
+  },
+  "total_time_s": 2018.0,
+  "quick": false
+}

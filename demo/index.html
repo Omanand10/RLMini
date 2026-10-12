@@ -791,7 +791,7 @@ verify();
 let last = performance.now();
 (function loop(now) {
   const dt = Math.min(100, now - last); last = now;
-  for (const p of players) { p.advance(dt); p.draw(now); }
+  for (const p of players) if (p.cv.offsetParent) { p.advance(dt); p.draw(now); }   // only the visible tab
   requestAnimationFrame(loop);
 })(last);
 </script>
