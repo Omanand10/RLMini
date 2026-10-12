@@ -1,18 +1,30 @@
-import { DATA } from "./sim/env";
+import { useEffect } from "react";
+import Lenis from "lenis";
+import Hero from "./sections/Hero";
+import MissionControl from "./sections/MissionControl";
 
-/** Temporary landing page so the deployment pipeline exists; the 3D site replaces it. */
 export default function App() {
-  const q = DATA.table["Q-learning"];
+  useEffect(() => {        // deep links like /#mission-control after React has rendered
+    const id = location.hash.slice(1);
+    if (id) requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView());
+  }, []);
+  useEffect(() => {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const lenis = new Lenis({ lerp: 0.12 });
+    let id = 0;
+    const raf = (t: number) => { lenis.raf(t); id = requestAnimationFrame(raf); };
+    id = requestAnimationFrame(raf);
+    return () => { cancelAnimationFrame(id); lenis.destroy(); };
+  }, []);
+  // ?only=mission-control renders one section alone (used for screenshots while developing)
+  const only = new URLSearchParams(location.search).get("only");
+  if (only === "mission-control") return <MissionControl />;
   return (
-    <main className="dark" style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: "var(--gutter)" }}>
-      <div className="wrap">
-        <p className="eyebrow">RL Lab mini project · Chandrayaan-3</p>
-        <h1 className="display">Teaching Pragyan to plan its own lunar day.</h1>
-        <p className="lede">
-          Trained Q-learning agent: average mission score <span className="num">{q.return_mean.toFixed(1)}</span>,{" "}
-          <span className="num">{q.sent_mean.toFixed(2)}</span> of 4 samples relayed. Full 3D mission simulator coming soon.
-        </p>
-      </div>
-    </main>
+    <>
+      <Hero />
+      <main>
+        <MissionControl />
+      </main>
+    </>
   );
 }

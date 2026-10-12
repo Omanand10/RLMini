@@ -1,81 +1,64 @@
+/* One lunar day: sections move from sunrise to night. */
 :root {
-  --paper: #edebe5;
-  --paper-2: #e3e0d8;
-  --ink: #121212;
-  --ink-2: #3a3936;
-  --muted: #74716a;
-  --line: rgba(18, 18, 18, 0.14);
-  --accent: #e8611a;
-  --space: #060606;
-  --space-2: #111110;
-  --space-line: rgba(237, 235, 229, 0.12);
-  --space-text: #edebe5;
-  --space-muted: #8f8c85;
-  --good: #8fcf7f;
-  --bad: #f0644b;
-  --warn: #e8b04a;
-  --info: #9cc2e8;
-  --serif: "Instrument Serif", "Times New Roman", serif;
-  --sans: "Geist Variable", "Helvetica Neue", Arial, sans-serif;
-  --mono: "JetBrains Mono Variable", ui-monospace, Menlo, monospace;
-  --gutter: clamp(16px, 4vw, 64px);
+  --sky: #000000;
+  --regolith: #d3d1cb;      /* light sections: lunar dust */
+  --regolith-hi: #e2e0db;   /* noon */
+  --regolith-mid: #8e8b84;
+  --ink: #161615;
+  --ink-soft: #4a4844;
+  --gold: #c9a13b;          /* Kapton foil on Vikram: the one accent */
+  --gold-soft: rgba(201, 161, 59, 0.16);
+  --solar: #3e64b8;         /* solar-cell blue: data */
+  --signal: #d8452e;        /* failures only */
+  --good: #6fae5f;
+  --on-dark: #e9e7e2;
+  --on-dark-soft: #9b988f;
+  --rule-dark: rgba(233, 231, 226, 0.14);
+  --rule-light: rgba(22, 22, 21, 0.16);
+  --font: "Archivo Variable", "Helvetica Neue", Arial, sans-serif;
+  --gutter: clamp(16px, 4.5vw, 72px);
+  --measure: 62ch;
 }
 
 * { box-sizing: border-box; }
-html { background: var(--space); }
+html { background: var(--sky); }
 body {
   margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font: 400 17px/1.55 var(--sans);
+  background: var(--sky);
+  color: var(--on-dark);
+  font: 400 18px/1.55 var(--font);
+  font-stretch: 100%;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
-a { color: inherit; }
-button { font: inherit; color: inherit; }
-::selection { background: var(--accent); color: #fff; }
+a { color: inherit; text-underline-offset: 3px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+::selection { background: var(--gold); color: #000; }
 
-/* ---------- type ---------- */
-.eyebrow {
-  font: 500 12px/1 var(--mono);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.display {
-  font: 400 clamp(56px, 9vw, 152px)/0.92 var(--serif);
-  letter-spacing: -0.02em;
-  margin: 0;
-}
-.h2 {
-  font: 400 clamp(40px, 5.6vw, 88px)/0.98 var(--serif);
-  letter-spacing: -0.015em;
-  margin: 0;
-}
-.h3 { font: 500 22px/1.25 var(--sans); letter-spacing: -0.01em; margin: 0; }
-.lede { font-size: clamp(18px, 1.5vw, 22px); line-height: 1.5; color: var(--ink-2); max-width: 46ch; }
-.mono { font-family: var(--mono); }
-.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-em.serif { font-family: var(--serif); font-style: italic; font-weight: 400; }
+/* type scale (perfect fourth, 18px base) */
+.t-display { font-size: clamp(48px, 8.4vw, 136px); line-height: 0.92; font-weight: 640; font-stretch: 125%; letter-spacing: -0.035em; margin: 0; }
+.t-h2 { font-size: clamp(36px, 5vw, 76px); line-height: 0.98; font-weight: 620; font-stretch: 125%; letter-spacing: -0.03em; margin: 0; }
+.t-h3 { font-size: 24px; line-height: 1.2; font-weight: 600; font-stretch: 112%; letter-spacing: -0.01em; margin: 0; }
+.t-lede { font-size: clamp(19px, 1.6vw, 23px); line-height: 1.5; max-width: 44ch; margin: 0; }
+.t-small { font-size: 14px; line-height: 1.45; }
+.t-cond { font-stretch: 80%; }
+.tnum { font-variant-numeric: tabular-nums; }
 
-/* ---------- layout ---------- */
-.section { padding: clamp(96px, 14vh, 180px) var(--gutter); position: relative; }
-.wrap { max-width: 1480px; margin: 0 auto; }
-.grid12 { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; }
-.rule { height: 1px; background: var(--line); border: 0; margin: 0; }
-.section-head { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; align-items: end; margin-bottom: 72px; }
-.section-head .eyebrow { grid-column: 1 / span 12; margin-bottom: 8px; }
-.section-head .h2 { grid-column: 1 / span 7; }
-.section-head .lede { grid-column: 8 / span 5; margin: 0; }
-@media (max-width: 900px) {
-  .section-head .h2, .section-head .lede { grid-column: 1 / -1; }
+.section { position: relative; padding: clamp(96px, 15vh, 180px) var(--gutter); }
+.wrap { max-width: 1440px; margin: 0 auto; }
+.light { background: var(--regolith); color: var(--ink); }
+.noon { background: var(--regolith-hi); color: var(--ink); }
+.light .muted, .noon .muted { color: var(--ink-soft); }
+.muted { color: var(--on-dark-soft); }
+
+/* section opener: a time-of-day marker + headline + lede on a two-column grid */
+.opener { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 32px 48px; align-items: end; margin-bottom: clamp(56px, 8vh, 96px); }
+.opener .clock { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; font-size: 15px; font-stretch: 85%; }
+.opener .clock i { width: 10px; height: 10px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 4px var(--gold-soft); }
+@media (max-width: 900px) { .opener { grid-template-columns: 1fr; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
-
-.dark { background: var(--space); color: var(--space-text); }
-.dark .eyebrow { color: var(--space-muted); }
-.dark .lede { color: #c9c6be; }
-.dark .rule { background: var(--space-line); }
-
-.reveal { opacity: 0; transform: translateY(28px); }
