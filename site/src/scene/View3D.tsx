@@ -20,7 +20,7 @@ export function View3D({ children, overlay, className, fov = 38 }: {
   }, []);
   return (
     <div ref={ref} className={className}>
-      <Canvas frameloop={visible ? "always" : "never"} dpr={dpr} shadows
+      <Canvas frameloop={visible ? "always" : "never"} dpr={dpr} shadows resize={{ scroll: false, debounce: { scroll: 50, resize: 0 } }}
         camera={{ fov, near: 0.1, far: 200 }} gl={{ antialias: true, powerPreference: "high-performance" }}>
         <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(1.5)} flipflops={3} onFallback={() => setDpr(1)} />
         {children}

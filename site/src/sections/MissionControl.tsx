@@ -4,7 +4,7 @@ import { View3D } from "../scene/View3D";
 import { LunarScene, type AddedHazard, type SceneOptions } from "../scene/LunarScene";
 import { Player } from "../sim/player";
 import { ACTION_LABEL, AGENT_INFO, NARRATION, buildSteps, fixedMap, mapFor } from "../sim/episodes";
-import { ACTIONS, BOULDER, CRATER, DATA, MAX_BATTERY, REGOLITH, SENT, HELD, VIKRAM, makeMap, type LunarMap } from "../sim/env";
+import { ACTIONS, BOULDER, CRATER, DATA, MAX_BATTERY, REGOLITH, SENT, HELD, SHADOW, SLOPE, VIKRAM, makeMap, type LunarMap } from "../sim/env";
 import "./mission-control.css";
 
 /*
@@ -82,54 +82,90 @@ function outcomeText(p: Player): [string, string] {
 // ---- the three panels under the view -----------------------------------------------------------
 function Goals({ player }: { player: Player }) {
   useP(player);
-  const sites = player.state[3], m = player.map;
+  const [, , bat, sites, phase] = player.state, m = player.map;
   const slept = player.done && player.endEv === "sleep_safe";
   return (
     <section className="mc-card">
-      <h3>Goals for this episode</h3>
-      <p className="t-small muted">Sample each site with the right instrument, send the results through Vikram, then sleep safely at dusk.</p>
+      <h3>State and goal progress</h3>
+      <dl className="state">
+        <div><dt>Battery</dt><dd><span className="battery" aria-label={`${bat} of ${MAX_BATTERY}`}>
+          {Array.from({ length: MAX_BATTERY }, (_, k) => <i key={k} className={k < bat ? (bat <= 2 ? "low" : "on") : ""} />)}
+        </span></dd></div>
+        <div><dt>Sun</dt><dd><span className="phases">{PHASES.map((ph, k) => <b key={ph} className={k === phase ? "on" : ""}>{ph}</b>)}</span></dd></div>
+      </dl>
       <ul className="goals">
         {m.sites.map(([, , typ], i) => (
           <li key={i}>
             <span>{typ === 0 ? "Sulphur" : "Element"} site {i % 2 + 1} <em>{typ === 0 ? "LIBS" : "APXS"}</em></span>
             <span className="ticks">
               <b className={sites[i] >= HELD ? "on" : ""}>Sampled</b>
-              <b className={sites[i] === SENT ? "on" : ""}>Sent</b>
+              <b className={sites[i] === SENT ? "on" : ""}>Relayed</b>
             </span>
           </li>
         ))}
-        <li><span>Sleep safely at dusk</span><span className="ticks"><b className={slept ? "on" : ""}>Done</b></span></li>
+        <li><span>Safe sleep at dusk</span><span className="ticks"><b className={slept ? "on" : ""}>Done</b></span></li>
       </ul>
     </section>
   );
 }
 
-function StatePanel({ player }: { player: Player }) {
+/** Small top-down map: terrain, sites, relay range, path and rover. Clickable in live mode. */
+function MiniMap({ player, onCell }: { player: Player; onCell?: (r: number, c: number, shift: boolean) => void }) {
   useP(player);
-  const [r, c, bat, , phase] = player.state;
+  const m = player.map, S = 10, N = m.H;
+  const [r, c] = player.state, sites = player.state[3];
+  const fill = (t: number) => (t === SHADOW ? "#2c3240" : t === SLOPE ? "#6d6a64" : t === BOULDER ? "#4a4743" : t === VIKRAM ? "#c9a13b" : "#8e8b84");
+  const pts = player.track.map(([tr, tc]) => `${tc * S + S / 2},${tr * S + S / 2}`).join(" ");
+  const [vr, vc] = m.vikram;
   return (
-    <section className="mc-card">
-      <h3>State sₜ</h3>
-      <p className="t-small muted">What the agent knows when it chooses. Together with the site progress on the left, this is the full state.</p>
-      <dl className="state">
-        <div><dt>Position</dt><dd className="tnum">row {r}, column {c}</dd></div>
-        <div><dt>Battery</dt><dd><span className="battery" aria-label={`${bat} of ${MAX_BATTERY}`}>
-          {Array.from({ length: MAX_BATTERY }, (_, k) => <i key={k} className={k < bat ? (bat <= 2 ? "low" : "on") : ""} />)}
-        </span></dd></div>
-        <div><dt>Sun</dt><dd><span className="phases">{PHASES.map((ph, k) => <b key={ph} className={k === phase ? "on" : ""}>{ph}</b>)}</span></dd></div>
-      </dl>
+    <section className="mc-card minimap">
+      <h3>Top-down map</h3>
+      <svg viewBox={`0 0 ${N * S} ${N * S}`} className={onCell ? "clickable" : ""} role="img" aria-label="Top-down map of the episode"
+        onClick={(e) => {
+          if (!onCell) return;
+          const box = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+          onCell(Math.floor(((e.clientY - box.top) / box.height) * N), Math.floor(((e.clientX - box.left) / box.width) * N), e.shiftKey);
+        }}>
+        {m.terrain.map((row, rr) => row.map((t, cc) => (
+          <rect key={`${rr}-${cc}`} x={cc * S} y={rr * S} width={S} height={S} fill={fill(t)} stroke="#000" strokeWidth={0.3} />
+        )))}
+        {m.terrain.map((row, rr) => row.map((t, cc) => t === CRATER ? <circle key={`k${rr}-${cc}`} cx={cc * S + S / 2} cy={rr * S + S / 2} r={S * 0.38} fill="#050505" /> : null))}
+        <rect x={(vc - 3) * S} y={(vr - 3) * S} width={7 * S} height={7 * S} fill="none" stroke="#e9e7e2" strokeDasharray="2 2" strokeWidth={0.6} />
+        {m.sites.map(([sr, sc, typ], i) => (
+          <circle key={i} cx={sc * S + S / 2} cy={sr * S + S / 2} r={3.2} strokeWidth={1.4}
+            stroke={typ === 0 ? "#d8452e" : "#6f8fd8"} fill={sites[i] === SENT ? "#c9a13b" : sites[i] === HELD ? "#e9d39b" : "none"} />
+        ))}
+        {player.track.length > 1 && <polyline points={pts} fill="none" stroke="#c9a13b" strokeWidth={1.2} strokeLinejoin="round" />}
+        <circle cx={c * S + S / 2} cy={r * S + S / 2} r={2.8} fill="#fff" stroke="#000" strokeWidth={0.8} />
+      </svg>
+      <p className="t-small muted">White dot = rover. Rings: red = sulphur site, blue = element site; filled gold once relayed.{onCell ? " Click a cell to drop a crater here too." : ""}</p>
     </section>
   );
 }
 
-function PolicyPanel({ agent }: { agent: string }) {
-  const info = AGENT_INFO[agent];
+const TRAIN_EPISODES: Record<string, number> = { "Dyna-Q (k=10)": 60000 };
+function epsilonAt(agent: string, ep: number) {
+  const n = TRAIN_EPISODES[agent] ?? 300000;
+  return Math.max(0.05, Math.pow(0.05, ep / (0.8 * n)));
+}
+
+/** What this episode is, in RL terms. */
+function EpisodeInfo({ agent, epKey }: { agent: string; epKey: string }) {
+  const E = DATA.episodes[epKey];
+  const ep = Number((epKey.match(/train(\d+)/) ?? [])[1] ?? 0);
+  let text: string;
+  if (E.stage === "untrained") text = "The agent's first training episode. Its Q-values are all zero and ε = 1, so every action is random.";
+  else if (E.stage === "learning" || E.stage === "improving")
+    text = `Training episode ${ep.toLocaleString()}. It still explores (ε ≈ ${epsilonAt(agent, ep).toFixed(2)}) while its Q-values are only partly learned.`;
+  else if (E.stage === "unseen") text = "A map the agent never trained on: new craters and boulders, same goals.";
+  else if (agent === "Value Iteration") text = "The optimal policy, computed from the exact model. A reference for the learners.";
+  else if (agent === "Heuristic" || agent === "Random") text = "A baseline policy, not learned.";
+  else text = "A test episode with the final policy: no exploration (ε = 0). The agent always takes the action with the highest Q(s, a).";
   return (
     <section className="mc-card">
-      <h3>Policy π: {info.short}</h3>
-      <p className="tags">{info.tags.map((t) => <span key={t}>{t}</span>)}</p>
-      <p>{info.idea}</p>
-      <p className="t-small muted">During replay the agent acts greedily: in each state it takes the action with the highest learned value.</p>
+      <h3>About this episode</h3>
+      <p>{text}</p>
+      <p className="t-small muted">The map and the goal are the same in every episode. Only the random events change: wheel slips, battery drain and when the sun moves.</p>
     </section>
   );
 }
@@ -199,11 +235,13 @@ function Replay({ speed, setSpeed }: { speed: number; setSpeed: (n: number) => v
         <input className="scrub" type="range" min={0} max={player.length} value={player.i} aria-label="Jump to step"
           onChange={(e) => player.seek(+e.target.value)} />
       </div>
-      <World player={player} agent={agent} opts={{ labels: true, range: true, camera: "control" }} />
-      <div className="mc-cards">
-        <Goals player={player} />
-        <StatePanel player={player} />
-        <PolicyPanel agent={agent} />
+      <div className="mc-main">
+        <World player={player} agent={agent} opts={{ labels: false, range: true, camera: "control" }} />
+        <aside className="mc-side">
+          <MiniMap player={player} />
+          <EpisodeInfo agent={agent} epKey={epKey} />
+          <Goals player={player} />
+        </aside>
       </div>
     </>
   );
@@ -300,24 +338,26 @@ function Live({ speed, setSpeed }: { speed: number; setSpeed: (n: number) => voi
           <input type="range" min={1} max={12} value={speed} onChange={(e) => setSpeed(+e.target.value)} />
         </label>
       </div>
-      <p className="live-note">{note}</p>
-      <World player={player} agent="DQN" opts={{ labels: true, range: true, navcam: true, camera: "control", added, onCell }} />
-      <div className="mc-cards">
-        <Goals player={player} />
-        <StatePanel player={player} />
-        <section className="mc-card brain">
-          <h3>Q(s, a): the network's choice</h3>
-          <p className="t-small muted">Expected total reward still to come after each action. The rover takes the highest (gold). It sees only the dashed 5 × 5 m square around it.</p>
-          <ol>
-            {valid.sort((x, y) => y.v - x.v).slice(0, 8).map(({ v, i }) => (
-              <li key={i} className={i === b!.a ? "best" : ""}>
-                <span>{ACTION_LABEL[ACTIONS[i]]}</span>
-                <i style={{ width: `${8 + ((v - lo) / (hi - lo || 1)) * 92}%` }} />
-                <b className="tnum">{v.toFixed(0)}</b>
-              </li>
-            ))}
-          </ol>
-        </section>
+      <div className="mc-main">
+        <World player={player} agent="DQN" opts={{ labels: false, range: true, navcam: true, camera: "control", added, onCell }} />
+        <aside className="mc-side">
+          <p className="live-note">{note}</p>
+          <MiniMap player={player} onCell={onCell} />
+          <section className="mc-card brain">
+            <h3>Q(s, a) right now</h3>
+            <p className="t-small muted">Expected return after each action. The rover takes the top one (gold). It sees only the dashed 5 × 5 m camera square.</p>
+            <ol>
+              {valid.sort((x, y) => y.v - x.v).slice(0, 6).map(({ v, i }) => (
+                <li key={i} className={i === b!.a ? "best" : ""}>
+                  <span>{ACTION_LABEL[ACTIONS[i]]}</span>
+                  <i style={{ width: `${8 + ((v - lo) / (hi - lo || 1)) * 92}%` }} />
+                  <b className="tnum">{v.toFixed(0)}</b>
+                </li>
+              ))}
+            </ol>
+          </section>
+          <Goals player={player} />
+        </aside>
       </div>
     </>
   );
@@ -327,16 +367,15 @@ export default function MissionControl() {
   const [mode, setMode] = useState<Mode>("replay");
   const [speed, setSpeed] = useState(4);
   return (
-    <section className="section mission-control" id="mission-control">
+    <section className="section panel mission-control" id="mission-control">
       <div className="wrap">
-        <div className="opener">
+        <div className="mc-head">
           <h2 className="t-h2">Watch the agents drive</h2>
-          <p className="t-lede muted">Each run is one episode: one lunar day. Press play and follow the line above the map. It shows the action the agent picked and the reward it got for it.</p>
-        </div>
-        <div className="mc-modes" role="tablist">
+          <div className="mc-modes" role="tablist">
           {([["replay", "Replay an episode"], ["compare", "Compare two agents"], ["live", "Drop a crater (live)"]] as [Mode, string][]).map(([k, label]) => (
             <button key={k} role="tab" aria-selected={mode === k} className={mode === k ? "on" : ""} onClick={() => setMode(k)}>{label}</button>
           ))}
+          </div>
         </div>
         {mode === "replay" && <Replay speed={speed} setSpeed={setSpeed} />}
         {mode === "compare" && <Compare speed={speed} setSpeed={setSpeed} />}

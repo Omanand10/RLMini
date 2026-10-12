@@ -9,7 +9,7 @@ const REPO = "https://github.com/Omanand10/RLMini";
 // ---- where the idea comes from (kept short: the simulation is the point) --------------------------
 export function Mission() {
   return (
-    <section className="section light compact" id="mission">
+    <section className="section panel light" id="mission">
       <div className="wrap context">
         <h2 className="t-h3">Where the idea comes from</h2>
         <p>
@@ -71,80 +71,93 @@ function MapChart() {
   );
 }
 
+const REWARDS = (K: Record<string, number>): [string, number][] => [
+  ["Sample a site with the right instrument", K.R_SAMPLE], ["Relay a result to Earth (per sample)", K.R_SENT],
+  ["Sleep safely at dusk in sunlight", K.R_SLEEP_SAFE], ["Bonus: all four results relayed before sleeping", K.R_MISSION],
+  ["Every step (time and energy)", K.R_STEP], ["Wrong instrument or failed transmit", K.R_WRONG],
+  ["Night falls while awake", K.R_NIGHT], ["Sleep in shadow or on low battery", K.R_SLEEP_UNSAFE],
+  ["Crater or empty battery", K.R_CRATER],
+];
+
 export function RLProblem() {
-  const K = DATA.consts;
-  const rewards: [string, number][] = [
-    ["Sample a site with the right instrument", K.R_SAMPLE], ["Relay a result to Earth (per sample)", K.R_SENT],
-    ["Sleep safely at dusk in sunlight", K.R_SLEEP_SAFE], ["Bonus: all four results relayed before sleeping", K.R_MISSION],
-    ["Every step (time and energy)", K.R_STEP], ["Wrong instrument or failed transmit", K.R_WRONG],
-    ["Night falls while awake", K.R_NIGHT], ["Sleep in shadow or on low battery", K.R_SLEEP_UNSAFE],
-    ["Crater or empty battery", K.R_CRATER],
-  ];
   return (
-    <section className="section morning" id="problem">
+    <section className="section panel morning" id="problem">
       <div className="wrap">
-        <div className="opener">
+        <div className="panel-head">
           <h2 className="t-h2">The reinforcement-learning problem</h2>
-          <p className="t-lede muted">The rover's day as an MDP: what the agent sees, what it can do, how it is scored, and how it learns from that score.</p>
+          <p className="t-lede muted">The rover's lunar day written as a Markov decision process.</p>
         </div>
-
         <div className="rl-grid">
-          <div className="rl-visuals">
-            <Loop />
-            <figure className="map-figure">
-              <MapChart />
-              <figcaption>
-                <span><i className="key-swatch start" />Start state</span>
-                <span><i className="key-swatch site-s" />Sulphur site (LIBS)</span>
-                <span><i className="key-swatch site-e" />Element site (APXS)</span>
-                <span><i className="key-swatch vikram" />Vikram; dashed square = relay range</span>
-                <span><i className="key-swatch crater" />Crater (terminal)</span>
-                <span><i className="key-swatch shadow" />Shadow (no charging)</span>
-                <span><i className="key-swatch slope" />Slope (drains battery)</span>
-                <span><i className="key-swatch boulder" />Boulder (blocked)</span>
-              </figcaption>
-            </figure>
-          </div>
-
+          <figure className="map-figure">
+            <MapChart />
+            <figcaption>
+              <span><i className="key-swatch start" />Start state</span>
+              <span><i className="key-swatch site-s" />Sulphur site (LIBS)</span>
+              <span><i className="key-swatch site-e" />Element site (APXS)</span>
+              <span><i className="key-swatch vikram" />Vikram; dashed = relay range</span>
+              <span><i className="key-swatch crater" />Crater (terminal)</span>
+              <span><i className="key-swatch shadow" />Shadow (no charging)</span>
+              <span><i className="key-swatch slope" />Slope (drains battery)</span>
+              <span><i className="key-swatch boulder" />Boulder (blocked)</span>
+            </figcaption>
+          </figure>
           <ul className="mdp-list">
             <li><b>Agent</b> The program that chooses the rover's next command. It starts with no knowledge of the map.</li>
-            <li><b>Environment</b> A 12 × 12 m simulation of the landing zone, one cell per metre. It is stochastic:
+            <li><b>Environment</b> A 12 × 12 m simulated landing zone, one cell per metre. It is stochastic:
               <ul>
-                <li>a drive command slips 45° to the side 10% of the time,</li>
-                <li>each move may drain the battery, more often on slopes,</li>
-                <li>the sun moves from morning to noon to dusk at random times.</li>
+                <li>drive commands slip 45° sideways 10% of the time,</li>
+                <li>moves may drain the battery, more often on slopes,</li>
+                <li>the sun moves morning → noon → dusk at random times.</li>
               </ul>
             </li>
             <li><b>State sₜ</b> The information the agent uses to choose its action at step t:
               <ul>
-                <li>rover position (row and column),</li>
-                <li>battery level, 0 to 5,</li>
-                <li>status of each of the 4 sites: not sampled, sampled, or relayed,</li>
+                <li>rover position (row, column) and battery level 0–5,</li>
+                <li>each site: not sampled, sampled, or relayed,</li>
                 <li>sun phase: morning, noon or dusk.</li>
               </ul>
-              <span className="note">{DATA.valueIteration.n_reachable_states.toLocaleString()} different states can occur. The neural-network agent sees a 5 × 5 m window around the rover instead of the whole map.</span>
             </li>
             <li><b>Actions aₜ</b> 13 commands:
               <ul>
-                <li>drive N, NE, E, SE, S, SW, W or NW,</li>
-                <li>LIBS laser or APXS scan on the current cell,</li>
-                <li>transmit held results through Vikram,</li>
-                <li>recharge from sunlight,</li>
-                <li>sleep for the night (allowed from dusk).</li>
+                <li>drive in 8 directions,</li>
+                <li>LIBS laser, APXS scan, transmit, recharge, sleep.</li>
               </ul>
             </li>
-            <li><b>Episode</b> One lunar day.
+            <li><b>Episode</b> One lunar day, from the start state to a terminal state:
               <ul>
-                <li>Start state: next to Vikram, battery full, morning, nothing sampled.</li>
-                <li>Goal: all four results relayed, then a safe sleep at dusk.</li>
-                <li>Terminal states: crater, empty battery, nightfall, or sleeping.</li>
+                <li>goal: all four results relayed, then a safe sleep at dusk,</li>
+                <li>terminal: crater, empty battery, nightfall or sleep.</li>
               </ul>
             </li>
-            <li><b>Policy π(s)</b> What training produces: the action to take in each state. The agents learn Q(s, a), the expected return of taking action a in state s, and act greedily on it.</li>
+            <li><b>Policy π(s)</b> The action to take in each state. Agents learn Q(s, a), the expected return of action a in state s, and act greedily on it.</li>
           </ul>
         </div>
+      </div>
+    </section>
+  );
+}
 
+export function Learning() {
+  const rewards = REWARDS(DATA.consts);
+  return (
+    <section className="section panel morning" id="learning">
+      <div className="wrap">
+        <div className="panel-head">
+          <h2 className="t-h2">Rewards and learning</h2>
+          <p className="t-lede muted">The agent only ever sees these numbers. Everything it does is learned from them.</p>
+        </div>
         <div className="rl-lower">
+          <div>
+            <Loop />
+            <ol className="steps">
+              <li><b>Act.</b> In state sₜ choose an action: random with probability ε (exploration), otherwise the best known.</li>
+              <li><b>Observe</b> the reward rₜ₊₁ and the next state sₜ₊₁.</li>
+              <li><b>Update</b> the estimate:
+                <span className="formula">Q(s, a) ← Q(s, a) + α [ r + γ maxₐ′ Q(s′, a′) − Q(s, a) ]</span>
+              </li>
+              <li><b>Repeat</b> for 300,000 episodes while ε decays from 1.0 to 0.05. Final policy: π(s) = argmaxₐ Q(s, a).</li>
+            </ol>
+          </div>
           <div>
             <h3 className="t-h3">Reward function</h3>
             <table className="ledger">
@@ -155,17 +168,6 @@ export function RLProblem() {
               </tbody>
             </table>
             <p className="t-small muted">Discount factor γ = 0.99. The agent maximises the return G = r₁ + γr₂ + γ²r₃ + …</p>
-          </div>
-          <div>
-            <h3 className="t-h3">How an agent learns</h3>
-            <ol className="steps">
-              <li><b>Act.</b> In state sₜ, choose an action. With probability ε it is random (exploration), otherwise the best one known so far.</li>
-              <li><b>Observe.</b> The environment returns the reward rₜ₊₁ and the next state sₜ₊₁.</li>
-              <li><b>Update.</b> Q-learning moves its estimate towards the target:
-                <span className="formula">Q(s, a) ← Q(s, a) + α [ r + γ maxₐ′ Q(s′, a′) − Q(s, a) ]</span>
-              </li>
-              <li><b>Repeat</b> for 300,000 episodes while ε decays from 1.0 to 0.05. The final policy is greedy: π(s) = argmaxₐ Q(s, a).</li>
-            </ol>
           </div>
         </div>
       </div>
@@ -178,9 +180,9 @@ export function Algorithms() {
   const order = ["Value Iteration", "Q-learning", "Dyna-Q (k=10)", "SARSA", "DQN", "n-step SARSA (n=4)", "Monte Carlo", "Heuristic", "Random"];
   const T = DATA.table;
   return (
-    <section className="section noon" id="algorithms">
+    <section className="section panel noon" id="algorithms">
       <div className="wrap">
-        <div className="opener">
+        <div className="panel-head">
           <h2 className="t-h2">Seven algorithms, one environment</h2>
           <p className="t-lede muted">All agents trained on the same simulator. Each learned policy was then frozen and run greedily on 500 new episodes. Value Iteration knows the exact model, so it shows the best possible score.</p>
         </div>
@@ -195,7 +197,7 @@ export function Algorithms() {
                 return (
                   <tr key={n} className={n === "Value Iteration" ? "reference" : n === "Q-learning" ? "best" : ["Heuristic", "Random"].includes(n) ? "baseline" : ""}>
                     <td>
-                      <b>{info.short}</b>
+                      <b>{info.short}{n === "Q-learning" && <em className="best-tag">Best learning agent</em>}{n === "Value Iteration" && <em className="best-tag ref">Optimal, knows the model</em>}</b>
                       <span className="tags">{info.tags.map((t) => <i key={t}>{t}</i>)}</span>
                     </td>
                     <td>{info.idea}</td>
@@ -209,7 +211,7 @@ export function Algorithms() {
             </tbody>
           </table>
         </div>
-        <p className="t-small muted algos-note">Avg return = mean total reward per episode. Goal reached = all four results relayed and a safe sleep. Rule-based and Random are baselines, not RL.</p>
+        <p className="t-small muted algos-note">Value Iteration is the optimal reference: it is given the exact model and does not learn. Q-learning is the best of the agents that learn from experience. Rule-based and Random are baselines.</p>
       </div>
     </section>
   );
@@ -220,49 +222,57 @@ export function Results() {
   const T = DATA.table, q = T["Q-learning"], s = T.SARSA, g = DATA.generalization.DQN;
   const sw = DATA.sweeps;
   return (
-    <section className="section morning" id="results">
-      <div className="wrap">
-        <div className="opener">
-          <h2 className="t-h2">Results</h2>
-          <p className="t-lede muted">How the return improved during training, how the final policies behave, and what that says about each method.</p>
+    <>
+      <section className="section panel morning" id="results">
+        <div className="wrap">
+          <div className="panel-head">
+            <h2 className="t-h2">Results: training</h2>
+            <p className="t-lede muted">Return per episode while each agent learned.</p>
+          </div>
+          <div className="results-a">
+            <figure className="result">
+              <LearningCurves />
+              <figcaption>Smoothed return of the training episodes (ε-greedy). Every agent starts near −110, almost always lost in a crater. Dashed lines are fixed references.</figcaption>
+            </figure>
+            <ul className="observations">
+              <li><b>Off-policy vs on-policy.</b> Q-learning learns the greedy policy and cuts close to craters ({pct(q.crater_rate)} losses). SARSA learns from the exploring policy it follows and keeps a wider margin ({pct(s.crater_rate)}), at a lower return.</li>
+              <li><b>Planning saves experience.</b> Dyna-Q replays ten imagined steps from its learned model per real step and plateaus in about five times fewer episodes. Without planning it scored {sw["sweep:planning=0"].return_mean.toFixed(0)} after 20,000 episodes; with k = 5, {sw["sweep:planning=5"].return_mean.toFixed(0)}.</li>
+              <li><b>Long returns are noisy here.</b> Slips and the −100 crater penalty make multi-step returns high-variance, so one-step TD learned best. n-step SARSA got worse as n grew (n = 1: {sw["sweep:n=1"].return_mean.toFixed(0)}, n = 8: {sw["sweep:n=8"].return_mean.toFixed(0)}).</li>
+              <li><b>Close to optimal, not there yet.</b> Q-learning reaches {Math.round((100 * q.return_mean) / T["Value Iteration"].return_mean)}% of the optimal return and was still improving at 300,000 episodes.</li>
+            </ul>
+          </div>
         </div>
-
-        <figure className="result">
-          <h3 className="t-h3">Return per episode during training</h3>
-          <LearningCurves />
-          <figcaption>Smoothed return of the training episodes (ε-greedy, so slightly below the final greedy score). Every agent starts near −110, almost always lost in a crater. Dashed lines are fixed references.</figcaption>
-        </figure>
-
-        <div className="result-pair">
-          <figure className="result">
-            <h3 className="t-h3">How episodes end with the final policy</h3>
-            <FailureModes />
-          </figure>
-          <figure className="result">
-            <h3 className="t-h3">Goal reached on maps never seen in training</h3>
-            <Generalization />
-          </figure>
+      </section>
+      <section className="section panel morning" id="results-policies">
+        <div className="wrap">
+          <div className="panel-head">
+            <h2 className="t-h2">Results: final policies</h2>
+            <p className="t-lede muted">Each trained policy run greedily on 500 new episodes.</p>
+          </div>
+          <div className="result-pair">
+            <figure className="result">
+              <h3 className="t-h3">How episodes end</h3>
+              <FailureModes />
+            </figure>
+            <figure className="result">
+              <h3 className="t-h3">Goal reached on maps never seen in training</h3>
+              <Generalization />
+              <figcaption>A Q-table only works on its training map. The DQN reads a local camera window, so it still reaches the goal in {pct(g.perturbed.success_rate)} of episodes when new hazards appear. Fully random terrain is beyond it.</figcaption>
+            </figure>
+          </div>
         </div>
-
-        <h3 className="t-h3 obs-title">What the results show</h3>
-        <ul className="observations">
-          <li><b>Off-policy vs on-policy.</b> Q-learning learns the greedy policy and takes shorter routes past craters ({pct(q.crater_rate)} losses). SARSA learns from the exploring policy it actually follows, so it keeps a wider margin ({pct(s.crater_rate)} losses) at the cost of a lower return.</li>
-          <li><b>Planning saves experience.</b> Dyna-Q replays ten imagined transitions from its learned model for every real one, and reached its plateau in about five times fewer episodes than Q-learning. Without planning (k = 0) it scored {sw["sweep:planning=0"].return_mean.toFixed(0)} after 20,000 episodes; with k = 5 it scored {sw["sweep:planning=5"].return_mean.toFixed(0)}.</li>
-          <li><b>Long returns are noisy here.</b> Wheel slips and the −100 crater penalty make multi-step returns high-variance, so one-step TD learned best. n-step SARSA got worse as n grew (n = 1: {sw["sweep:n=1"].return_mean.toFixed(0)}, n = 8: {sw["sweep:n=8"].return_mean.toFixed(0)}) and Monte Carlo was weakest.</li>
-          <li><b>Function approximation generalises.</b> A Q-table only works on the map it was trained on. The DQN sees a local camera window and still reaches the goal in {pct(g.perturbed.success_rate)} of episodes on maps with new hazards. It fails on fully random terrain, a limit of this project.</li>
-          <li><b>Close to optimal, not there yet.</b> Q-learning reaches {Math.round((100 * q.return_mean) / T["Value Iteration"].return_mean)}% of the optimal return and was still improving at 300,000 episodes. The rule-based planner scores slightly higher but uses the full map, which the learners never get.</li>
-        </ul>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
 
 // ---- footer ----------------------------------------------------------------------------------------
 export function Night() {
   return (
-    <footer className="section night">
+    <footer className="section night" id="credits">
       <div className="wrap">
         <p className="night-line">Good night, Pragyan.</p>
+        <p className="team">Om Dwivedi, 16010123213 &nbsp;&nbsp; Om Anand Jha, 16010123214</p>
         <div className="night-grid">
           <p className="muted">Reinforcement Learning Lab mini project, Department of Computer Engineering, K. J. Somaiya School of Engineering, 2026. The simulation is inspired by ISRO's Chandrayaan-3 mission and is not an ISRO product.</p>
           <ul>

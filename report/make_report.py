@@ -214,13 +214,13 @@ info = doc.add_table(rows=3, cols=4); info.style = "Table Grid"; info.alignment 
 borders(info)
 cells = [("Course Name:", "Reinforcement Learning", "Semester:", "VII"),
          ("Date of Performance:", "___ / ___ / ______", "DIV/ Batch No:", ""),
-         ("Student Name:", "", "Roll No:", "")]
+         ("Student Name:", "Om Dwivedi\nOm Anand Jha", "Roll No:", "16010123213\n16010123214")]
 for i, row in enumerate(cells):
     for j, val in enumerate(row):
         c = info.cell(i, j); c.text = ""
         pp = c.paragraphs[0]; pp.paragraph_format.space_before = Pt(3); pp.paragraph_format.space_after = Pt(3)
         run(pp, val, bold=True, color=RED if j % 2 == 0 else None)
-        c.width = Inches([1.85, 2.45, 1.45, 0.95][j])
+        c.width = Inches([1.85, 2.2, 1.35, 1.3][j])
 doc.add_paragraph()
 para("Reinforcement Learning Lab CA – Mini Project Report", bold=True, align=WD_ALIGN_PARAGRAPH.LEFT)
 

@@ -25,7 +25,6 @@ export default function Hero() {
     return p;
   }, []);
   useEffect(() => { player.play(); }, [player]);
-  const q = DATA.table["Q-learning"];
   return (
     <header className="hero">
       <View3D className="hero-canvas" fov={32}>
@@ -46,9 +45,9 @@ export default function Hero() {
         </div>
       </div>
       <dl className="hero-facts">
-        <div><dt>Algorithms compared</dt><dd className="tnum">7</dd></div>
-        <div><dt>Results relayed per episode, Q-learning</dt><dd className="tnum">{q.sent_mean.toFixed(1)} of 4</dd></div>
-        <div><dt>Crater losses, random to trained</dt><dd className="tnum">{(DATA.table.Random.crater_rate * 100).toFixed(0)}% to {(q.crater_rate * 100).toFixed(0)}%</dd></div>
+        <div><dt>Om Dwivedi</dt><dd className="tnum">16010123213</dd></div>
+        <div><dt>Om Anand Jha</dt><dd className="tnum">16010123214</dd></div>
+        <div><dt>Reinforcement Learning Lab, Semester VII</dt><dd>K. J. Somaiya School of Engineering</dd></div>
       </dl>
     </header>
   );

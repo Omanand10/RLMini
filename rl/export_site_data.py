@@ -42,13 +42,13 @@ def episodes(R):
                                (n // 2, "improving", f"Episode {n//2:,} (improving)")):
             add(f"{name}|train{ep}", lab, r["recordings"].get(ep), agent=name, stage=stage)
         for i, fr in enumerate(r["final_episodes"]):
-            add(f"{name}|final{i}", f"Trained, mission {i+1}", fr, agent=name, stage="trained")
+            add(f"{name}|final{i}", f"Test episode {i+1} (trained policy)", fr, agent=name, stage="trained")
     for name in ("Value Iteration", "Heuristic", "Random"):
         for i, fr in enumerate(R[name]["final_episodes"]):
-            add(f"{name}|final{i}", f"Mission {i+1}", fr, agent=name, stage="trained")
+            add(f"{name}|final{i}", f"Test episode {i+1}", fr, agent=name, stage="trained")
     d = R["DQN"]
     for i, fr in enumerate(d["final_episodes"]["fixed"]):
-        add(f"DQN|final{i}", f"Trained, mission {i+1}", fr, agent="DQN", stage="trained")
+        add(f"DQN|final{i}", f"Test episode {i+1} (trained policy)", fr, agent="DQN", stage="trained")
     for i, fr in enumerate(d["final_episodes"]["perturbed"]):
         add(f"DQN|unseen{i}", f"Unseen hazard map {i+1}", fr, m=d["perturbed_maps"][i], agent="DQN", stage="unseen")
     for i, fr in enumerate(R["Heuristic"]["final_episodes_perturbed"]):

@@ -16,18 +16,20 @@
   --rule-dark: rgba(233, 231, 226, 0.14);
   --rule-light: rgba(22, 22, 21, 0.16);
   --font: "Archivo Variable", "Helvetica Neue", Arial, sans-serif;
-  --gutter: clamp(16px, 4.5vw, 72px);
+  --gutter: clamp(1rem, 4.5vw, 4.5rem);
   --measure: 62ch;
 }
 
 * { box-sizing: border-box; }
-html { background: var(--sky); scroll-snap-type: y proximity; scroll-behavior: smooth; }
+/* One root size from the viewport: every rem below scales with the screen, so a 13" laptop and a 27"
+   monitor show the same layout (design reference: 1600 x 1000 at 16px). */
+html { font-size: clamp(10px, min(1vw, 1.6vh), 20px); background: var(--sky); scroll-snap-type: y proximity; scroll-behavior: smooth; }
 .hero, .section { scroll-snap-align: start; }
 body {
   margin: 0;
   background: var(--sky);
   color: var(--on-dark);
-  font: 400 18px/1.55 var(--font);
+  font: 400 1.125rem/1.55 var(--font);
   font-stretch: 100%;
   -webkit-font-smoothing: antialiased;
 }
@@ -36,17 +38,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 ::selection { background: var(--gold); color: #000; }
 
-/* type scale (perfect fourth, 18px base) */
-.t-display { font-size: clamp(48px, 8.4vw, 136px); line-height: 0.92; font-weight: 640; font-stretch: 125%; letter-spacing: -0.035em; margin: 0; }
-.t-h2 { font-size: clamp(36px, 5vw, 76px); line-height: 0.98; font-weight: 620; font-stretch: 125%; letter-spacing: -0.03em; margin: 0; }
-.t-h3 { font-size: 24px; line-height: 1.2; font-weight: 600; font-stretch: 112%; letter-spacing: -0.01em; margin: 0; }
-.t-lede { font-size: clamp(19px, 1.6vw, 23px); line-height: 1.5; max-width: 44ch; margin: 0; }
-.t-small { font-size: 14px; line-height: 1.45; }
+/* type scale (perfect fourth, 1.125rem base) */
+.t-display { font-size: clamp(3rem, 8.4vw, 8.5rem); line-height: 0.92; font-weight: 640; font-stretch: 125%; letter-spacing: -0.035em; margin: 0; }
+.t-h2 { font-size: clamp(2.25rem, 5vw, 4.75rem); line-height: 0.98; font-weight: 620; font-stretch: 125%; letter-spacing: -0.03em; margin: 0; }
+.t-h3 { font-size: 1.5rem; line-height: 1.2; font-weight: 600; font-stretch: 112%; letter-spacing: -0.01em; margin: 0; }
+.t-lede { font-size: clamp(1.1875rem, 1.6vw, 1.4375rem); line-height: 1.5; max-width: 44ch; margin: 0; }
+.t-small { font-size: 0.875rem; line-height: 1.45; }
 .t-cond { font-stretch: 80%; }
 .tnum { font-variant-numeric: tabular-nums; }
 
-.section { position: relative; padding: clamp(96px, 15vh, 180px) var(--gutter); }
-.wrap { max-width: 1440px; margin: 0 auto; }
+.section { position: relative; padding: clamp(6rem, 15vh, 11.25rem) var(--gutter); }
+.wrap { max-width: 90rem; margin: 0 auto; }
 .light { background: var(--regolith); color: var(--ink); }
 .morning { background: #dad8d2; color: var(--ink); }
 .noon { background: var(--regolith-hi); color: var(--ink); }
@@ -54,12 +56,20 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .muted { color: var(--on-dark-soft); }
 
 /* section opener: a time-of-day marker + headline + lede on a two-column grid */
-.opener { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 32px 48px; align-items: end; margin-bottom: clamp(56px, 8vh, 96px); }
-.opener .clock { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; font-size: 15px; font-stretch: 85%; }
-.opener .clock i { width: 10px; height: 10px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 4px var(--gold-soft); }
-@media (max-width: 900px) { .opener { grid-template-columns: 1fr; } }
+.opener { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 2rem 3rem; align-items: end; margin-bottom: clamp(3.5rem, 8vh, 6rem); }
+.opener .clock { grid-column: 1 / -1; display: flex; align-items: center; gap: 0.75rem; font-size: 0.9375rem; font-stretch: 85%; }
+.opener .clock i { width: 0.625rem; height: 0.625rem; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 0.25rem var(--gold-soft); }
+@media (max-width: 56.25rem) { .opener { grid-template-columns: 1fr; } }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* ---- one-screen panels: each snap stop fits the viewport ---- */
+html { scroll-snap-type: y mandatory; }
+.panel { min-height: 100svh; display: flex; flex-direction: column; justify-content: center; padding: 5svh var(--gutter); }
+.panel > .wrap { width: 100%; }
+.panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem 3rem; flex-wrap: wrap; margin-bottom: 3.5svh; }
+.panel-head .t-h2 { font-size: 3.25rem; }
+.panel-head .t-lede { max-width: 40ch; }
