@@ -437,11 +437,11 @@ para("Exploration starts fully random (ε = 1) so that every reachable part of t
 
 heading("3.6 Working Demonstration", before=4)
 para("The trained agents are demonstrated in an interactive 3D lunar simulation on the project website "
-     "(https://pragyan-rl.vercel.app, built with React and three.js; it also runs offline from the repository). It has four views: **Mission Replay** (any agent at episode 1, mid-training or fully trained, "
-     "with battery, sun, sample status and a mission log), **Head-to-Head** (two agents side by side on the same "
-     "map), **Live: Drop a Crater** (the DQN agent drives in real time inside the browser; clicking a cell drops a "
-     "crater or boulder, and the agent's Q-values and NavCam window are shown as it replans) and **Scoreboard**. "
-     "In 200 scripted tests in which a crater was dropped on the exact cell the DQN rover was about to enter, it "
+     "(https://pragyan-rl.vercel.app, built with React and three.js; it also runs offline from the repository). The site walks through the mission, the MDP and the results, and ends in a 3D Mission Control with three "
+     "modes: **Replay** (any agent at episode 1, mid-training or fully trained, with a timeline, narration of each "
+     "command, battery, sun phase and science status), **Compare** (two agents side by side on the same map) and "
+     "**Drop a crater** (the DQN drives in real time in the browser; clicking the terrain adds a crater or boulder, "
+     "and the panel shows how good the network rates each command). In 200 scripted tests in which a crater was dropped on the exact cell the DQN rover was about to enter, it "
      "changed its command every time and avoided the new crater in 90% of cases.")
 placeholder("[Screenshots of the demo to be inserted here: Mission Replay (trained Q-learning mission complete), "
             "Head-to-Head (untrained vs trained), Live crater-drop with the Q-value panel, Scoreboard]")
