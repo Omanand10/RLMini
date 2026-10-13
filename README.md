@@ -1,5 +1,9 @@
 # Project Pragyan: an RL mission planner for the Chandrayaan-3 lunar rover
 
+**Live site:** https://pragyan-rl.vercel.app
+
+**Team:** Om Dwivedi ([@Unchanted](https://github.com/Unchanted)) and Om Anand Jha ([@Omanand10](https://github.com/Omanand10))
+
 This is an RL Lab CA mini project. A reinforcement-learning agent plans Pragyan's lunar day. It has to:
 - Sample science sites with the right instrument (LIBS or APXS).
 - Relay the data through the Vikram lander.
